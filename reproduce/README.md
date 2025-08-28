@@ -1,6 +1,6 @@
 # Reproduce Guidance
 
-This directory contains scripts for evaluating the DyG-RAG on the three datasets.
+This directory contains scripts for evaluating the DyG-RAG on the three datasets. The code includes complete RAG and evaluation pipelines. For any questions or issues, please feel free to discuss with us.
 
 ## Overview
 
@@ -125,5 +125,3 @@ The system calculates:
 - **Response Time**: Average query processing time
 
 **Note**: The evaluation code is based on the implementation from [JayLZhou/GraphRAG](https://github.com/JayLZhou/GraphRAG).
-
-The code includes complete RAG and evaluation pipelines. For any questions or issues, please feel free to discuss with us.
