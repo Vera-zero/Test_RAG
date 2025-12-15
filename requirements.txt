@@ -36,7 +36,7 @@ python-multipart==0.0.20
 rouge-score==0.1.2
 sentence-transformers>=2.2.0
 tomli==2.0.1
-umap==0.1.1
+umap-learn>=0.5.0
 uvloop==0.21.0
 vllm==0.8.4
 websockets==15.0.1

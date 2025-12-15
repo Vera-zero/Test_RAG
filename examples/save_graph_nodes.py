@@ -6,7 +6,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import os, json, time, asyncio, logging, re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
+import datetime
 
 import numpy as np
 from tqdm import tqdm
@@ -105,9 +106,6 @@ class LocalBGEEmbedding:
             return fn()
 
 
-# （保留注：远端 LLM 包装器已移除，保持原脚本的 LLM 行为不变）
-
-
 # Check for OPENAI_API_KEY environment variable
 def check_deepseek_api_key():
     """
@@ -149,53 +147,158 @@ def check_deepseek_api_key():
     print("✅ DEEPSEEK_API_KEY is properly configured.")
     return True
 
-# Check API key before proceeding
-check_deepseek_api_key()
-
-WORK_DIR = Path("work_dir")
-WORK_DIR.mkdir(exist_ok=True)
-CORPUS_FILE = Path("/mnt/nvm_data/guest24/luoyixingfei/DyG-RAG/demo/Corpus.json")
-
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("DyG-RAG").setLevel(logging.INFO)
-
-
 def read_json_file(fp: Path):
+    """读取 JSON 文件"""
     with fp.open(encoding="utf-8") as f:
         return json.load(f)
 
-# Use local BGE for embeddings and remote LLM (vLLM/DeepSeek-compatible) for completions
-local_bge_path = os.getenv("LOCAL_BGE_PATH", os.path.join(os.path.dirname(__file__), "..", "models", "bge_m3"))
-embedding_func = LocalBGEEmbedding(local_bge_path)
-# Ensure model is loaded once and expose embedding_dim via EmbeddingFunc wrapper
-try:
-    embedding_func._load()
-    emb_dim = embedding_func.embedding_dim
-except Exception:
-    emb_dim = getattr(embedding_func, 'embedding_dim', 1536)
+async def save_graph_nodes(graph_func: GraphRAG, output_dir: Path):
+    """
+    保存图中所有节点到 JSON 文件
+    
+    Args:
+        graph_func: GraphRAG 实例
+        output_dir: 输出目录
+    """
+    try:
+        # 确保输出目录存在
+        output_dir.mkdir(exist_ok=True)
+        
+        # 获取事件图存储实例
+        event_graph = graph_func.event_dynamic_graph
+        
+        # 获取所有节点
+        all_nodes = await event_graph.get_all_nodes()
+        
+        if not all_nodes:
+            logger.warning("图中没有找到任何节点")
+            return
+        
+        # 准备节点数据
+        nodes_data = {
+            "metadata": {
+                "export_time": datetime.datetime.now().isoformat(),
+                "total_nodes": len(all_nodes),
+                "graph_type": "dynamic_event_graph"
+            },
+            "nodes": {}
+        }
+        
+        # 处理每个节点
+        for node_id, node_data in all_nodes.items():
+            if node_data:
+                # 清理节点数据，确保可序列化
+                clean_node_data = {}
+                for key, value in node_data.items():
+                    if isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                        clean_node_data[key] = value
+                
+                nodes_data["nodes"][node_id] = clean_node_data
+        
+        # 保存到文件
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = output_dir / f"graph_nodes_{timestamp}.json"
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(nodes_data, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"✅ 成功保存 {len(nodes_data['nodes'])} 个节点到: {output_file}")
+        
+        # 打印节点统计信息
+        print(f"\n📊 节点统计信息:")
+        print(f"   - 总节点数: {len(nodes_data['nodes'])}")
+        
+        # 按节点类型统计
+        node_types = {}
+        for node_id, node_data in nodes_data['nodes'].items():
+            node_type = node_data.get('entity_type', 'unknown')
+            node_types[node_type] = node_types.get(node_type, 0) + 1
+        
+        print(f"   - 节点类型分布:")
+        for node_type, count in node_types.items():
+            print(f"     * {node_type}: {count} 个")
+        
+        return nodes_data
+        
+    except Exception as e:
+        logger.error(f"保存节点时出错: {e}")
+        raise
 
-# Wrap embedding func with attributes so GraphRAG's storage can read embedding_dim
-embedding_func = wrap_embedding_func_with_attrs(embedding_dim=emb_dim, max_token_size=embedding_func.max_token_size)(embedding_func)
+async def main():
+    """主函数"""
+    # 检查 API 密钥
+    check_deepseek_api_key()
+    
+    # 设置工作目录
+    WORK_DIR = Path("work_dir")
+    WORK_DIR.mkdir(exist_ok=True)
+    
+    # 输出目录
+    OUTPUT_DIR = Path("saved_nodes")
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    
+    CORPUS_FILE = Path("../demo/Corpus.json")
+    
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger("DyG-RAG").setLevel(logging.INFO)
+    
+    # 使用本地 BGE 嵌入
+    local_bge_path = os.getenv("LOCAL_BGE_PATH", os.path.join(os.path.dirname(__file__), "..", "models", "bge_m3"))
+    embedding_func = LocalBGEEmbedding(local_bge_path)
+    
+    # 确保模型加载并包装嵌入函数
+    try:
+        embedding_func._load()
+        emb_dim = embedding_func.embedding_dim
+    except Exception:
+        emb_dim = getattr(embedding_func, 'embedding_dim', 1536)
+    
+    embedding_func = wrap_embedding_func_with_attrs(embedding_dim=emb_dim, max_token_size=embedding_func.max_token_size)(embedding_func)
+    
+    # 创建 GraphRAG 实例
+    graph_func = GraphRAG(
+        working_dir=str(WORK_DIR),
+        embedding_func=embedding_func,
+        best_model_max_token_size=16384,
+        cheap_model_max_token_size=16384
+    )
+    
+    # 读取语料文件
+    if not CORPUS_FILE.exists():
+        logger.error(f"语料文件不存在: {CORPUS_FILE}")
+        return
+    
+    corpus_data = read_json_file(CORPUS_FILE)
+    total_docs = len(corpus_data)
+    logger.info(f"开始处理，共有 {total_docs} 个文档")
+    
+    # 准备文档
+    all_docs = []
+    for idx, obj in enumerate(tqdm(corpus_data, desc="加载文档", total=total_docs)):
+        enriched_content = f"Title: {obj['title']}\nDocument ID: {obj['doc_id']}\n\n{obj['context']}"
+        all_docs.append(enriched_content)
+    
+    # 插入文档并构建图
+    logger.info("开始构建知识图谱...")
+    # 修复：使用异步插入方法
+    await graph_func.ainsert(all_docs)
+    logger.info("知识图谱构建完成")
+    
+    # 保存节点
+    logger.info("开始保存节点数据...")
+    nodes_data = await save_graph_nodes(graph_func, OUTPUT_DIR)
+    
+    # 可选：执行一个查询来验证图的功能
+    logger.info("执行测试查询...")
+    try:
+        # 修复：使用异步查询方法
+        result = await graph_func.aquery("Which position did Pat Duncan hold in Feb 1996?", param=QueryParam(mode="dynamic"))
+        print(f"\n🔍 测试查询结果:")
+        print(result)
+    except Exception as e:
+        logger.warning(f"测试查询失败: {e}")
+    
+    logger.info("脚本执行完成")
 
-graph_func = GraphRAG(
-    working_dir=str(WORK_DIR),
-    embedding_func=embedding_func,
-    best_model_max_token_size = 16384,
-    cheap_model_max_token_size = 16384
-)
-
-# Read the JSON file
-corpus_data = read_json_file(CORPUS_FILE)
-total_docs = len(corpus_data)
-logger.info(f"Start processing, total {total_docs} documents to process.")
-
-all_docs = []
-for idx, obj in enumerate(tqdm(corpus_data, desc="Loading docs", total=total_docs)):
-    enriched_content = f"Title: {obj['title']}\nDocument ID: {obj['doc_id']}\n\n{obj['context']}"
-    all_docs.append(enriched_content)
- 
-# insert_docs = all_docs[:10]
-# graph_func.insert(insert_docs)
-graph_func.insert(all_docs)
-
-print(graph_func.query("Which position did Pat Duncan hold in Feb 1996?", param=QueryParam(mode="dynamic")))
+if __name__ == "__main__":
+    asyncio.run(main())

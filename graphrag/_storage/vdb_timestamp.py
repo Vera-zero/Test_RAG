@@ -208,15 +208,32 @@ class TimestampEnhancedVectorStorage(NanoVectorDBStorage):
         # Get the query embedding
         query_embedding = await self.embedding_func([query])
         query_embedding = query_embedding[0]
-        
+
+        # Ensure semantic embedding has expected original_dim
+        query_embedding = np.asarray(query_embedding)
+        if query_embedding.shape[0] != self.original_dim:
+            if query_embedding.shape[0] < self.original_dim:
+                pad = np.zeros(self.original_dim - query_embedding.shape[0])
+                query_embedding = np.concatenate((query_embedding, pad))
+            else:
+                query_embedding = query_embedding[: self.original_dim]
+
         # Create timestamp encoding (defaults to all zeros, meaning time is not considered)
         if time_filter:
             ts_encoding = encode_timestamp(time_filter, self.timestamp_dim)
         else:
             ts_encoding = np.zeros(self.timestamp_dim)
-        
+
         # Concatenate the query embedding and timestamp encoding
         enhanced_query = np.hstack((query_embedding, ts_encoding))
+
+        # Final check: adjust enhanced_query to client vector dim if needed
+        client_dim = getattr(self._client, 'vec_dim', None)
+        if client_dim is not None and enhanced_query.shape[0] != client_dim:
+            if enhanced_query.shape[0] < client_dim:
+                enhanced_query = np.concatenate((enhanced_query, np.zeros(client_dim - enhanced_query.shape[0])))
+            else:
+                enhanced_query = enhanced_query[:client_dim]
         
         # Execute the query
         results = self._client.query(
@@ -235,16 +252,32 @@ class TimestampEnhancedVectorStorage(NanoVectorDBStorage):
          # Get the query embedding
         query_embedding = await self.embedding_func([query])
         query_embedding = query_embedding[0]
-        
+        # Ensure semantic embedding has expected original_dim
+        query_embedding = np.asarray(query_embedding)
+        if query_embedding.shape[0] != self.original_dim:
+            if query_embedding.shape[0] < self.original_dim:
+                pad = np.zeros(self.original_dim - query_embedding.shape[0])
+                query_embedding = np.concatenate((query_embedding, pad))
+            else:
+                query_embedding = query_embedding[: self.original_dim]
+
         # Get the timestamp encoding
         ts_encoding = encode_timestamp(timestamp, self.timestamp_dim)
-        
+
         # Apply the time weight
         actual_time_weight = time_weight if time_weight is not None else 1.0
         scaled_ts_encoding = ts_encoding * actual_time_weight
-        
+
         # Concatenate the semantic embedding and the weighted timestamp embedding
         enhanced_query = np.hstack((query_embedding, scaled_ts_encoding))
+
+        # Final check: adjust enhanced_query to client vector dim if needed
+        client_dim = getattr(self._client, 'vec_dim', None)
+        if client_dim is not None and enhanced_query.shape[0] != client_dim:
+            if enhanced_query.shape[0] < client_dim:
+                enhanced_query = np.concatenate((enhanced_query, np.zeros(client_dim - enhanced_query.shape[0])))
+            else:
+                enhanced_query = enhanced_query[:client_dim]
         
         # Execute the query
         results = self._client.query(

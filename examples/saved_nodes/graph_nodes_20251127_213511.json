@@ -1,0 +1,2201 @@
+{
+  "metadata": {
+    "export_time": "2025-11-27T21:35:11.156522",
+    "total_nodes": 179,
+    "graph_type": "dynamic_event_graph"
+  },
+  "nodes": {
+    "event-1a6291739755f590be25c4eeb4baa9b9": {
+      "timestamp": "2009-06-30",
+      "sentence": "On 30 June 2009, Pentney signed a six-month contract extension with Leicester City.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7a6a62323195deeda55862f7964b782b": {
+      "timestamp": "2009-12-01",
+      "sentence": "On 1 December 2009, Pentney again signed a six-month contract extension with Leicester City, keeping him at the club until the end final at Wembley Stadium.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "PENTNEY",
+        "WEMBLEY STADIUM",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-bbe6ab3a162a04786653bb953e965fd5": {
+      "timestamp": "2008-12",
+      "sentence": "In December 2008, Verma rejoined his former club Leicester City on trial and secured a six-month contract.",
+      "context": "Verma had previously been released from Leicester City's youth academy.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f1457c7659a62a56675630b4296bf850": {
+      "timestamp": "2009-05",
+      "sentence": "In May 2009, Verma was given a one-year contract extension by Leicester City.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2cfb803259d5521f1ce4d2068b266769": {
+      "timestamp": "2009-08-10",
+      "sentence": "On 10 August 2009, Verma joined Crewe Alexandra on loan for three months.",
+      "context": "Verma had joined Crewe Alexandra on trial on 6 August 2009.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "CREWE ALEXANDRA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-abda016a503cc8a08c1ac1f3baefb297": {
+      "timestamp": "2009-08-11",
+      "sentence": "Verma made his debut for Crewe Alexandra on 11 August 2009 in a 2-1 League Cup defeat to Blackpool.",
+      "context": "Verma replaced James Bailey at half time in his debut match.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "ERMA",
+        "CREWE ALEXANDRA",
+        "BLACKPOOL",
+        "LEAGUE CUP"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e0f52f5f90cdb854f1e32d356bd61765": {
+      "timestamp": "2009-08-15",
+      "sentence": "Verma made his league debut for Crewe Alexandra in a 4-0 win at Grimsby Town on 15 August 2009.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "ERMA",
+        "CREWE ALEXANDRA",
+        "GRIMSBY TOWN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9e0ec5455744012a9c7c8823379b74e2": {
+      "timestamp": "2009-11-03",
+      "sentence": "Verma returned to Leicester City on 3 November 2009, two weeks early having fallen out of favour at Crewe Alexandra.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "CREWE ALEXANDRA",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a4a65d8de1b7a21d61ece78752ae6887": {
+      "timestamp": "2010-02-06",
+      "sentence": "Verma had his first call up to the main Leicester City squad as an unused substitute in a 2-1 win at Blackpool on 6 February 2010.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "ERMA",
+        "BLACKPOOL",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a12e0abb0b55f6a1effb7424951c05ae": {
+      "timestamp": "2010-03-26",
+      "sentence": "Verma joined Conference National club Histon on loan for the remainder of the 2009-10 season on 26 March 2010.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "CONFERENCE NATIONAL",
+        "HISTON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-faf0bfda82fdbfcefec9ec65e9a3e202": {
+      "timestamp": "2010-05",
+      "sentence": "In May 2010, Verma was awarded with another contract extension by Leicester City.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-173f6fb5e30859df0dab057fcab21c12": {
+      "timestamp": "2010-08-10",
+      "sentence": "Verma made his senior debut for Leicester City as a substitute in a 4-3 League Cup win over Macclesfield on 10 August 2010.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "ERMA",
+        "LEAGUE CUP",
+        "MACCLESFIELD",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9f5ccf90eb4ec06e35320137280331ff": {
+      "timestamp": "2010-08-11",
+      "sentence": "On 11 August 2010, Verma was part of the Leicester City reserves squad that won the Totesport.com Cup in a 2-1 win over Oldham Athletic reserves at Quorn FC.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "OLDHAM ATHLETIC",
+        "TOTESPORT. COM CUP",
+        "QUORN FC",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-741d8d486796f3de31d31a6237cf3604": {
+      "timestamp": "2010-08-27",
+      "sentence": "On 27 August 2010, Verma joined Conference National club Kidderminster Harriers on loan for a month.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "KIDDERMINSTER HARRIERS",
+        "CONFERENCE NATIONAL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7d527b9049d07c2e4fdbfeaa3b9e1448": {
+      "timestamp": "2010-08",
+      "sentence": "Verma returned to Leicester City after breaking his hand during his debut for Kidderminster Harriers against Newport County.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "ERMA",
+        "KIDDERMINSTER HARRIERS",
+        "NEWPORT COUNTY",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d189760b6087528ce08339394cab4af3": {
+      "timestamp": "2010-11-19",
+      "sentence": "On 19 November 2010, Verma joined Darlington on loan until January 2011.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "DARLINGTON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-afa48e10841ee0f7583c5f14a2cec4c2": {
+      "timestamp": "2011-05-14",
+      "sentence": "Leicester City confirmed on 14 May 2011 that Verma would not be offered a new contract when it expires on 30 June 2011.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-624ba3779a99a3c636360597a5677044": {
+      "timestamp": "1989-03-02",
+      "sentence": "Mills signed for Second Division club Leicester City on 2 March 1989 as part of the deal that saw Phil Turner join County for a fee of £125,000.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "MILLS",
+        "SECOND DIVISION",
+        "COUNTY",
+        "LEICESTER CITY",
+        "PHIL TURNER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-ee468fcefcc69f6e4cfa898ee43cd1fc": {
+      "timestamp": "1989-03-04",
+      "sentence": "Mills made his debut for Leicester City two days after joining in a 1-0 victory at home to Walsall on 4 March 1989.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "ALSALL",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c0ea430f148c0f464418cf6808a63d8a": {
+      "timestamp": "1989",
+      "sentence": "Mills made 13 consecutive appearances for Leicester City before missing the last two matches of 1988-89.",
+      "context": "Leicester City finished 15th in the Second Division in the 1988-89 season.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-77cb7835e58b70b7cc580f2cd8bc8348": {
+      "timestamp": "1989-11-25",
+      "sentence": "Mills scored his first goal for Leicester City in a 1-0 win away to Stoke City on 25 November 1989.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "STOKE CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-79568bae60442c69bd803e6c823cab3f": {
+      "timestamp": "1990",
+      "sentence": "Mills made 30 appearances and scored 4 goals for Leicester City in the 1989-90 season.",
+      "context": "Leicester City ranked 13th place in the Second Division in 1989-90.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-976a9cb24286ef586f7f70aafb50d2e7": {
+      "timestamp": "1990",
+      "sentence": "Mills was named Leicester City's Player of the Year for the 1989-90 season.",
+      "context": "Mills established himself as a popular player with the supporters.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4fc9d34a6f8538d7e29ac785c33e11ee": {
+      "timestamp": "1991",
+      "sentence": "Mills made 49 appearances and scored 5 goals for Leicester City in the 1990-91 season.",
+      "context": "Leicester City avoided relegation to the Third Division by only two points, finishing one place above relegated West Bromwich Albion in 22nd place.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-be9c6ac120a5b139baf475a982fb2efd": {
+      "timestamp": "1992",
+      "sentence": "Mills appeared in all 62 Leicester City fixtures in the 1991-92 season, scoring 7 goals.",
+      "context": "Leicester City reached the Northern Area final of the Full Members Cup and the Second Division play-offs with a fourth-place finish in the league.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c0a5a82592175b24dac678657abf7e18": {
+      "timestamp": "1992",
+      "sentence": "Mills was named Leicester City's Player of the Year for the second time in the 1991-92 season.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c124461810510763b3f7684bdeec5765": {
+      "timestamp": "1992",
+      "sentence": "Leicester City lost 1-0 to Blackburn Rovers at Wembley Stadium in the Second Division play-off final in the 1991-92 season.",
+      "context": "Leicester City had beaten Cambridge United 6-1 on aggregate in the semi-final.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "BLACKBURN ROVERS",
+        "SECOND DIVISION",
+        "WEMBLEY STADIUM",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-eef3aa8034716f1dfceafc619cf073cd": {
+      "timestamp": "1993",
+      "sentence": "Mills captained the Leicester City team that reached the First Division play-offs in the 1992-93 season with a sixth place league finish.",
+      "context": "Leicester City beat Portsmouth 3-2 on aggregate in the semi-final but lost 4-3 to Swindon Town at Wembley Stadium in the final.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "FIRST DIVISION",
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-50d566d88e5ebcac05674073e81cc498": {
+      "timestamp": "1993",
+      "sentence": "Mills made 53 appearances for Leicester City in the 1992-93 season.",
+      "context": "Mills missed only three of Leicester City's fixtures that season.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f0a12bf05539ece6e14dd37e38464ced": {
+      "timestamp": "1994",
+      "sentence": "Mills missed the last few months of the 1993-94 season with a foot injury, having made 25 appearances by then.",
+      "context": "Leicester City finished fourth in the table and made the First Division play-offs for the third successive season.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9f7d8e98572135d62d753667eeff1ea4": {
+      "timestamp": "1994",
+      "sentence": "Leicester City beat Derby County 2-1 in the First Division play-off final in the 1993-94 season and thus earned promotion to the Premier League.",
+      "context": "Mills led the team out before the final despite being unable to play due to injury.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "PREMIER LEAGUE",
+        "FIRST DIVISION",
+        "DERBY COUNTY",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-300e0ae65aebafb22fbc7a535afa6cf6": {
+      "timestamp": "1994-09-26",
+      "sentence": "Mills returned to Notts County on 26 September 1994 after re-signing for a fee of £50,000.",
+      "context": "Mills had made one Premier League appearance for Leicester City by that point in the 1994-95 season.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "NOTTS COUNTY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-8a1433cdf2acc358644b5979b048b0ef": {
+      "timestamp": "1994-10-01",
+      "sentence": "Mills made his debut for Notts County in a 2-0 away defeat to Reading in the First Division on 1 October 1994.",
+      "context": "",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "READING",
+        "FIRST DIVISION",
+        "NOTTS COUNTY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d1b54a4649a78e43c2944479c3ae6ee5": {
+      "timestamp": "1995",
+      "sentence": "Mills won the Anglo-Italian Cup with Notts County in the 1994-95 season after County beat Ascoli 2-1 in the final.",
+      "context": "Notts County were relegated to the Second Division after finishing 24th in the First Division, with Mills making 43 appearances.",
+      "source_id": "chunk-df35fa52dab0cf8d6f1c7640fc0b4546",
+      "entities_involved": [
+        "MILLS",
+        "NOTTS COUNTY",
+        "COUNTY",
+        "ASCOLI",
+        "ANGLO - ITALIAN CUP"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4b1f9dac5eb44de2c082821b5940c80e": {
+      "timestamp": "static",
+      "sentence": "Mills picked up his last playing honour as part of the team that won the Anglo-Italian Cup after County beat Ascoli 2–1.",
+      "context": "This occurred during the season when Short returned to the team.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "COUNTY",
+        "ASCOLI",
+        "ANGLO - ITALIAN CUP",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f334733bde628a3e244a76aa55200b2f": {
+      "timestamp": "static",
+      "sentence": "County were relegated to the Second Division after finishing 24th in the First Division, with Mills making 43 appearances.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "FIRST DIVISION",
+        "COUNTY",
+        "SECOND DIVISION",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b04f28c5622870f18412489b74c71bff": {
+      "timestamp": "1995",
+      "sentence": "Mills started 1995–96 as County's first-choice right-back before losing his place to Tommy Gallagher.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "TOMMY GALLAGHER",
+        "COUNTY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-ecb6c042a035b9a5543ca22dd1cbe3c0": {
+      "timestamp": "1995-11",
+      "sentence": "Mills returned to the starting line-up in November 1995.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-6f74bb7a5fb9cc5a2532cb08a2775e05": {
+      "timestamp": "1995-12",
+      "sentence": "Mills' season was ended by a serious injury in December 1995.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f91d006f7fd29c1cf9202c396ae1d999": {
+      "timestamp": "1996",
+      "sentence": "County finished fourth in the Second Division in the 1995–96 season.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "COUNTY",
+        "SECOND DIVISION"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f41a3cdf8f6ddcabfdfd4c538ef22fe3": {
+      "timestamp": "1996",
+      "sentence": "County were beaten 2–0 by Bradford in the play-off final in the 1995–96 season.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "COUNTY",
+        "BRADFORD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b8209b8bbef3d5f3c7671ecb2080efe9": {
+      "timestamp": "1996",
+      "sentence": "County released Mills after he had made 20 appearances in 1995–96.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "COUNTY",
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-ea718287787b69cdbb293a6b01aa0e63": {
+      "timestamp": "1996-05",
+      "sentence": "Mills retired from professional football in May 1996 as a result of the injury he sustained that season.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "MILLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-eac4beac939ab850d2a665d45f667aa0": {
+      "timestamp": "2007",
+      "sentence": "Pentney was part of the under-18 squad that won the FA Premier Academy League by beating Sunderland under-18s 4–3 in a penalty shootout in the 2006–07 season.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "SUNDERLAND",
+        "FA PREMIER ACADEMY LEAGUE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b1a78027b05cb41cce83b25dbf5eb394": {
+      "timestamp": "2007-05-05",
+      "sentence": "Pentney signed his first professional contract on 5 May 2007, signing a one-year deal alongside Andy King, Max Gradel and Eric Odhiambo.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "ERIC ODHIAMBO",
+        "ANDY KING",
+        "MAX GRADEL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d9e8d5d42a2a6c78c85a33c5f84e6a5d": {
+      "timestamp": "2007-08-09",
+      "sentence": "Pentney joined Conference Premier team York City on a one-month loan on 9 August 2007.",
+      "context": "This followed a trial period with York City.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "YORK CITY",
+        "CONFERENCE PREMIER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1558f7d1dc24ecfc5320fb06ad79a4b9": {
+      "timestamp": "2007-09-08",
+      "sentence": "Pentney returned to Leicester from York City on 8 September 2007.",
+      "context": "He failed to make any appearances during his loan spell at York City.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEICESTER",
+        "YORK CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-bf37f18637110e42ecadfc9a67b2e863": {
+      "timestamp": "2008-01-29",
+      "sentence": "Pentney moved to Ilkeston Town on a one-month loan on 29 January 2008.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "ILKESTON TOWN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-20aeea4ceb50bed0e1bc62885de8575d": {
+      "timestamp": "2008-02-08",
+      "sentence": "Pentney was recalled from Ilkeston Town on 8 February 2008.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "ILKESTON TOWN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-977d85f53c195f131f5c31e146db7575": {
+      "timestamp": "2008-06",
+      "sentence": "Pentney signed a new one-year contract with Leicester in June 2008.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEICESTER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4b57795c19bbc5f1c93b9867076e02bf": {
+      "timestamp": "2008-10-23",
+      "sentence": "Pentney joined Woking on a one-month loan on 23 October 2008.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "WOKING"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0c91cceb709a93c2ab77fa6ab5906b15": {
+      "timestamp": "static",
+      "sentence": "Pentney made his first team debut for Leicester after coming on as a 59th minute substitute for David Martin against Swindon Town in a League One match.",
+      "context": "He made saves against Simon Cox and Hal Robson-Kanu as Leicester drew 1–1.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "PENTNEY",
+        "LEICESTER",
+        "SWINDON TOWN",
+        "DAVID MARTIN",
+        "LEAGUE ONE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1df7225776d0c688d9a4be93c4cfb8c9": {
+      "timestamp": "2010-02-13",
+      "sentence": "Pentney joined Leamington on a one-month loan deal on 13 February 2010.",
+      "context": "The loan was later extended to the end of the season.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEAMINGTON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0c038a1135f7814bbbfab0a9db4772c1": {
+      "timestamp": "2010-05-17",
+      "sentence": "Leicester City announced on 17 May 2010 that Pentney would be released when his contract expired on 30 June.",
+      "context": "Pentney finished the 2009–10 season having made no appearances for Leicester.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "PENTNEY",
+        "LEICESTER CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f212b72f990ff007fffffca3009218d8": {
+      "timestamp": "2015-08-19",
+      "sentence": "İnler joined Premier League club Leicester City on a three-year contract for an undisclosed fee on 19 August 2015.",
+      "context": "The fee was reported to be £3 million and İnler received the number 33 jersey.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEICESTER CITY",
+        "N",
+        "PREMIER LEAGUE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4d2fd211e3a1a23ededbded587c7fc03": {
+      "timestamp": "2015-08-22",
+      "sentence": "İnler made his début for Leicester City three days later, replacing Danny Drinkwater for the final ten minutes of a 1–1 draw with Tottenham Hotspur at King Power Stadium.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "KING POWER STADIUM",
+        "TOTTENHAM HOTSPUR",
+        "LEICESTER CITY",
+        "DANNY DRINKWATER",
+        "NLER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0b0b1b841fca6ca2ee6326a35454744d": {
+      "timestamp": "2015",
+      "sentence": "İnler totalled only seven Leicester appearances by the end of the calendar year 2015.",
+      "context": "This was due to the good performances of Drinkwater and NGolo Kanté.",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEICESTER",
+        "N",
+        "LER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-cfe749b4915992e344c988692430e19d": {
+      "timestamp": "2016",
+      "sentence": "İnler was not called up to the Switzerland squad for Euro 2016.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "SWITZERLAND",
+        "EURO 2016"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c2a605a4c0ceac2e555dba07ed3677ed": {
+      "timestamp": "2016",
+      "sentence": "İnler played the minimum five league games required to be eligible for a winners medal when Leicester became 2015–16 Premier League champions.",
+      "context": "",
+      "source_id": "chunk-2f23427eae30b87fb0ad0997eb85764b",
+      "entities_involved": [
+        "LEICESTER",
+        "N",
+        "PREMIER LEAGUE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-79e99900e7414df629e5bd2b7643c8a1": {
+      "timestamp": "2009-03",
+      "sentence": "Vincent joined Colchester United on loan until the end of the 2008–09 season in March 2009.",
+      "context": "Manager Paul Lambert said that Vincent had enthusiasm and hunger and would be a big player for Colchester United next season.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e77098b652bdd430a24efbbe2f431190": {
+      "timestamp": "2009-05",
+      "sentence": "Paul Lambert signed Vincent to a three-year contract for an undisclosed fee in May 2009.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "VINCENT",
+        "PAUL LAMBERT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-fb72d8b5200bf4eddce9864622ed14a9": {
+      "timestamp": "2009",
+      "sentence": "Paul Lambert left Colchester United after the first game of the 2009–10 season.",
+      "context": "The first game was a 7–1 win over Norwich City, and Paul Lambert was replaced by new boss Aidy Boothroyd.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "PAUL LAMBERT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-6b2288b7f5f6d7aee4b113e9e5269136": {
+      "timestamp": "2009",
+      "sentence": "Aidy Boothroyd replaced Paul Lambert as manager of Colchester United in 2009.",
+      "context": "This followed Paul Lambert's departure after the first game of the season.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "AID",
+        "PAUL LAMBERT",
+        "COLCHESTER UNITED",
+        "Y BOOTHROYD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-deec63d056bddc0eac7e6459a64704c4": {
+      "timestamp": "2010",
+      "sentence": "Vincent featured 21 times and scored three goals for Colchester United in the 2009–10 season.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9c84fd556930b47ebde2d12dbb8ad371": {
+      "timestamp": "2011",
+      "sentence": "Vincent featured 42 times and scored five goals for Colchester United in the 2010–11 season.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e08e9398276cd32045c4b873f175624e": {
+      "timestamp": "2011",
+      "sentence": "Vincent missed six weeks at the start of the 2011–12 season with a knee ligament injury.",
+      "context": "Vincent admitted he feared the injury could have ended his career and hinted at a move to a Midlands club.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9acee0080ca8e68dc764e32955f59ca3": {
+      "timestamp": "2011-12",
+      "sentence": "Vincent was struck down by a hamstring injury in December 2011, which kept him out of action for several weeks.",
+      "context": "His injuries limited him to just 12 appearances in the 2011–12 campaign.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4472f3f26debc83e4c9eb978d16c7602": {
+      "timestamp": "2012",
+      "sentence": "John Ward confirmed at the end of the 2011–12 season that Vincent had played his last game for Colchester United.",
+      "context": "Vincent's injuries had limited him to just 12 appearances in the campaign.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "VINCENT",
+        "JOHN WARD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-97196c1e46f61625f3520f9fd25e1153": {
+      "timestamp": "2004-06-29",
+      "sentence": "Elokobi became Phil Parkinson's fourth summer signing for Colchester United on 29 June 2004.",
+      "context": "Elokobi had been offered a trial at the end of the 2003–04 season after being spotted by Colchester United scouts.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "PHIL PARKINSON",
+        "COLCHESTER UNITED",
+        "ELOKOBI"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2c1da5bb884c37f499f83e4acac26b1b": {
+      "timestamp": "static",
+      "sentence": "Myers signed a one-year contract with Second Division Colchester United on a free transfer.",
+      "context": "This followed attention from First Division club Rotherham United.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "MYERS",
+        "SECOND DIVISION"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e71e07f272e9555af6e30adcc5c3c424": {
+      "timestamp": "2004-06",
+      "sentence": "Myers elected to leave Colchester United in June 2004.",
+      "context": "Despite being invited back for the 2004–05 pre-season, Myers chose to depart.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "MYERS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-574aa50b9481af1b4d7b3392d2c134ca": {
+      "timestamp": "static",
+      "sentence": "Pentney joined League One side Colchester United on a non-contract basis on 5 August to cover for injured goalkeeper Ben Williams.",
+      "context": "Pentney eventually signed a one-year contract with Colchester United on 9 September.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "BEN WILLIAMS",
+        "LEAGUE ONE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-8dba62aa53786371a3d6e830dbc5065c": {
+      "timestamp": "static",
+      "sentence": "Pentney signed a one-year contract with Colchester United on 9 September.",
+      "context": "Pentney had initially joined on a non-contract basis on 5 August to cover for injured goalkeeper Ben Williams.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-21015a5a0371883da68d26a36d429e0c": {
+      "timestamp": "static",
+      "sentence": "Pentney joined Bath City of the Conference Premier on a one-month loan on 4 November as cover for the injured Ryan Robinson.",
+      "context": "Pentney made his debut for Bath City two days later in a 2–2 draw with Altrincham.",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "BATH CITY",
+        "RYAN ROBINSON",
+        "CONFERENCE PREMIER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-fa533d12679bc8b7ac7879172f68e46d": {
+      "timestamp": "static",
+      "sentence": "Pentney's loan to Bath City was extended for a second month in December.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "BATH CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-6d1f08d10808c49c9f0de2f208be70ee": {
+      "timestamp": "2011-03-10",
+      "sentence": "Pentney signed for Conference South club Chelmsford City on loan until the end of the 2010–11 season on 10 March 2011.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "CONFERENCE SOUTH",
+        "CHELMSFORD CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2b4bdb02de064234d05a6b27934a254a": {
+      "timestamp": "static",
+      "sentence": "Pentney returned to Chelmsford City on a one-month loan deal on 12 September.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "CHELMSFORD CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-33fc2e5a7e3a45902e6f6ece7d576867": {
+      "timestamp": "static",
+      "sentence": "Pentney signed for Conference Premier side Hayes & Yeading United on a one-month loan on 16 November.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "HAYES & YEADING UNITED",
+        "CONFERENCE PREMIER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-549263462648dada384ac932e5094649": {
+      "timestamp": "2012-06-12",
+      "sentence": "Pentney signed a one-year extension with Colchester United on 12 June 2012.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "COLCHESTER UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1b031fe695bd73c24b412a0c4a56cf37": {
+      "timestamp": "2012-11-09",
+      "sentence": "Pentney joined Histon on a month-long loan deal on 9 November 2012.",
+      "context": "",
+      "source_id": "chunk-ee9cdfdc88fdda98082ca1a7a0285f87",
+      "entities_involved": [
+        "HISTON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-5e08843bdc32fc509885f94a7cb4d025": {
+      "timestamp": "2019-05-21",
+      "sentence": "Pentney rejoined Chelmsford City for a fourth spell on 21 May 2019.",
+      "context": "",
+      "source_id": "chunk-b3ccfa230ca9109db4bbbe7c7769e879",
+      "entities_involved": [
+        "CHELMSFORD CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-6f4375dcacb53d67f25d88e1902b703b": {
+      "timestamp": "2019-11-09",
+      "sentence": "Chelmsford City announced Pentney's retirement on 9 November 2019 after Pentney took up a full-time role at Ipswich Town.",
+      "context": "The announcement followed a 2–2 draw at home to Dorking Wanderers.",
+      "source_id": "chunk-b3ccfa230ca9109db4bbbe7c7769e879",
+      "entities_involved": [
+        "CHELMSFORD CITY",
+        "PENTNEY",
+        "IPSWICH TOWN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1406181131a6105ba19f0baab329059b": {
+      "timestamp": "2013-01",
+      "sentence": "Pentney joined Bishops Stortford on loan in January 2013.",
+      "context": "",
+      "source_id": "chunk-7cbba08c1a09ed8526e19ee2c213e1d3",
+      "entities_involved": [
+        "BISHOPS STORTFORD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-062b62f5f7d59c0fa275fd1f7fe0ba7d": {
+      "timestamp": "2013-01",
+      "sentence": "Pentney's contract with Colchester United was cancelled by mutual consent in the last week of January 2013.",
+      "context": "",
+      "source_id": "chunk-7cbba08c1a09ed8526e19ee2c213e1d3",
+      "entities_involved": [
+        "COLCHESTER UNITED",
+        "PENTNEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-8c17241dca8f786799599a12d0ecda21": {
+      "timestamp": "2013",
+      "sentence": "Pentney joined Bishops Stortford until the end of the season following January 2013.",
+      "context": "",
+      "source_id": "chunk-7cbba08c1a09ed8526e19ee2c213e1d3",
+      "entities_involved": [
+        "BISHOPS STORTFORD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d8519497ff547e795df1fdd37fb73990": {
+      "timestamp": "2013",
+      "sentence": "Pentney joined Bishops Stortford until the end of the 2012-2013 season.",
+      "context": "This occurred after his contract cancellation with Colchester United.",
+      "source_id": "chunk-7cbba08c1a09ed8526e19ee2c213e1d3",
+      "entities_involved": [
+        "BISHOPS STORTFORD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-70da431da1b07a879932d6907c1a293d": {
+      "timestamp": "1960",
+      "sentence": "Duncan was born in Edmonton, Alberta in 1960.",
+      "context": "",
+      "source_id": "chunk-e3c79e48f27b0b5e7115fc8482e050ca",
+      "entities_involved": [
+        "ALBERTA",
+        "DUNCAN",
+        "EDMONTON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c5d33dc84e31eb7c927625232143452a": {
+      "timestamp": "1964",
+      "sentence": "Duncan moved with her family to Whitehorse, Yukon in 1964.",
+      "context": "",
+      "source_id": "chunk-e3c79e48f27b0b5e7115fc8482e050ca",
+      "entities_involved": [
+        "DUNCAN",
+        "YUKON",
+        "WHITEHORSE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c11fbf16b87575225d51df91e17e9c35": {
+      "timestamp": "static",
+      "sentence": "Duncan graduated from Carleton University with a Bachelor of Arts in political science.",
+      "context": "",
+      "source_id": "chunk-e3c79e48f27b0b5e7115fc8482e050ca",
+      "entities_involved": [
+        "CARLETON UNIVERSITY",
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c8e6871c62528dc94568049b471f5592": {
+      "timestamp": "2009-12",
+      "sentence": "McLean was appointed the new head football coach at St. Andrews Episcopal School in December 2009.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        ". ANDREWS",
+        "MCLEAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b7e97702a2587012ad04c1f207e74b89": {
+      "timestamp": "2015-12",
+      "sentence": "Detmer became the offensive coordinator and quarterbacks coach at BYU in December 2015.",
+      "context": "Detmer worked under new head coach Kalani Sitake at BYU.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "DETMER",
+        "BYU"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-068175f1dcb9732778112c9dab9db857": {
+      "timestamp": "2017-11-27",
+      "sentence": "Detmer was released from the coordinator position at BYU on November 27, 2017.",
+      "context": "The dismissal came following BYU football's poor performance over the previous year after just two seasons.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "DETMER",
+        "BYU"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a50faeba6d6259d2da032aef69bb7050": {
+      "timestamp": "2017-11",
+      "sentence": "Vincent returned to former club Cheltenham Town as an academy coach in November 2017.",
+      "context": "Vincent combined the role with his job as a football coach at Halesowen College.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "CHELTENHAM TOWN",
+        "VINCENT"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d9dff6c78020ff875ecc548dfeba0d77": {
+      "timestamp": "1994",
+      "sentence": "Milos went to Oman as coach of Dhofar in 1994.",
+      "context": "With Dhofar, Milos won the silver medal in the Gulf Club Champions Cup and then was called by Bahrain club East Riffa Club where he stayed two years.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "MILO",
+        "OMAN",
+        "DHOF"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-81e58c77da88380f2d14c70729112c5b": {
+      "timestamp": "1998",
+      "sentence": "Milos was signed by Sichuan Quanxing FC (later Sichuan Guancheng) in 1998.",
+      "context": "Milos achieved best results in club history with 3rd place in Chinese Super League and was the first Croatian coach ever in China.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "MILO",
+        "SICHUAN GUANCHENG",
+        "SICHUAN QUANXING FC"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d5d4358748df4289919ad0a489e29b00": {
+      "timestamp": "2018-06",
+      "sentence": "Yankey was announced as a first team coach of London Bees in June 2018.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "LONDON BEES",
+        "YANKEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-da9b0cd8b7da3328945081175aa08701": {
+      "timestamp": "2019-02",
+      "sentence": "Yankey was appointed Head Coach of London Bees in February 2019.",
+      "context": "Yankey was appointed following the departure of Luke Swindlehurst to become head coach of Barnet's under-18s team.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "LONDON BEES",
+        "YANKEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d4d365db63dd470b161b3a50c3a54f49": {
+      "timestamp": "2019-05",
+      "sentence": "Yankey left London Bees in May 2019.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "LONDON BEES",
+        "YANKEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d863f83d8273cfb1ecb6a061d1908cef": {
+      "timestamp": "2008",
+      "sentence": "Myers coached Old Isleworthians Youth in 2008.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "MYERS",
+        "OLD ISLEWORTHIANS YOUTH"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-42f0e301ba381d65f181ce9faf3410ee": {
+      "timestamp": "2011",
+      "sentence": "Myers returned to Chelsea as U15 head coach in 2011.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "CHELSEA",
+        "MYERS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1c2e557fb6f92e877c4d68484c9e2444": {
+      "timestamp": "2012",
+      "sentence": "Myers became assistant to U21 and U19 head coach Dermot Drummy at Chelsea in 2012.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "DER",
+        "CHELSEA",
+        "MYERS",
+        "MOT DRUMMY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e2b7a2d254483b48b9ddb3cc38f291c6": {
+      "timestamp": "2016",
+      "sentence": "Myers spent the 2016-17 season as an assistant first team coach at Vitesse.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "MYERS",
+        "VITESSE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e8ce6a2614a49305ba171bebabe2021b": {
+      "timestamp": "2018-07-06",
+      "sentence": "Myers was appointed Chelsea U18 manager on 6 July 2018.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "CHELSEA",
+        "MYERS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c5d2fe362cb6ef9e50856a3789764882": {
+      "timestamp": "2019",
+      "sentence": "Myers was promoted into the role of Development Squad head coach at Chelsea one year later in 2019.",
+      "context": "During the curtailed 2019-20 season, Myers managed the team to the Premier League 2 First Division title.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "CHELSEA",
+        "MYERS",
+        "DEVELOPMENT SQUAD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4524b48be9cc898f9bf203cedde2f10b": {
+      "timestamp": "2019-01",
+      "sentence": "Mensing began his coaching career as a youth coach at Partick Thistle in January 2019.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "PARTICK THISTLE",
+        "MENSING"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-ae0b27b830d12abf4f721f9670351a39": {
+      "timestamp": "2016-11",
+      "sentence": "Miller took up a part-time coaching role with Rangers Under-20 team in November 2016.",
+      "context": "Miller took up the role upon signing a contract extension with Rangers.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "RANGERS",
+        "MILLER"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4ced110dbfb47b0570727a949a99e3fa": {
+      "timestamp": "2020-02",
+      "sentence": "Miller retired as a player in February 2020 and took a coaching role with Australian club Newcastle Jets.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "MILLER",
+        "NEWCASTLE JETS",
+        "AUSTRALIAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-44c5a41d851301e769df0c5739b19a46": {
+      "timestamp": "2005-01-02",
+      "sentence": "Vasquez joined newly created MLS team C.D. Chivas USA as assistant coach on January 2, 2005.",
+      "context": "Vasquez joined after one season as assistant with the Los Angeles Galaxy.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "ASQUEZ",
+        "MLS",
+        "C. D. CHIVAS USA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f012b6aca24b36b2e322042a56ee4b0d": {
+      "timestamp": "2008-07",
+      "sentence": "Vasquez worked as the assistant to Jürgen Klinsmann at German club FC Bayern Munich between July 2008 and April 2009.",
+      "context": "Vasquez left when Klinsmann was dismissed due to bad results.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "FC BAYERN MUNICH",
+        "GERMAN",
+        "RGEN KLINSMANN",
+        "Ü"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0e7e294cb94f691688f3d8dbaf83fa8c": {
+      "timestamp": "2009-12-02",
+      "sentence": "Vasquez was hired to his first head coaching job on December 2, 2009, at former club Chivas.",
+      "context": "",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "CHIVAS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e2082ce18b0510a6d6db8cb1c8447a2d": {
+      "timestamp": "2011-08-11",
+      "sentence": "Vasquez was recalled by Klinsmann as an assistant coach for a friendly against Mexico on August 11, 2011.",
+      "context": "Klinsmann had been named head coach of the United States men's national team.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "ASQUEZ",
+        "MEXICO",
+        "MANN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e51bf3e0de5c14022761624aa6cdf5fa": {
+      "timestamp": "2014-03-31",
+      "sentence": "Vasquez was replaced by Tab Ramos on March 31, 2014.",
+      "context": "The replacement occurred less than 3 months before the World Cup, relegating Vasquez to scouting and match observations.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "B RAMOS",
+        "TA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-00871f8167bd8451c8c317bcbd000895": {
+      "timestamp": "2009",
+      "sentence": "Guppy was recruited for the position of assistant coach to Gary Smith at Colorado Rapids after a season as player-coach at Rochester.",
+      "context": "Rochester released Guppy from his duties, allowing him to move onto a higher level of coaching.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "COLORADO RAPIDS",
+        "ROCHESTER",
+        "PY",
+        "GARY SMITH"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f26572e35ec0c077b2009771e1d70400": {
+      "timestamp": "2009",
+      "sentence": "Guppy was assistant coach at the Colorado Rapids for three years, from 2009 to 2012.",
+      "context": "During his time at the club the Rapids lifted the MLS Cup in 2010.",
+      "source_id": "chunk-d0ee76bf69cfb11e2d900e62114534f1",
+      "entities_involved": [
+        "COLORADO RAPIDS",
+        "GUP",
+        "PY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1d2626c2b596c1b3a6c76a884f7a59e3": {
+      "timestamp": "2009",
+      "sentence": "He was assistant coach at the Colorado Rapids for three years, from 2009 to 2012.",
+      "context": "During his time at the club the Rapids lifted the MLS Cup in 2010.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "COLORADO RAPIDS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a1bc70abd18c1088721b925b63b18e04": {
+      "timestamp": "2010",
+      "sentence": "The Colorado Rapids lifted the MLS Cup in 2010.",
+      "context": "This occurred during his time as assistant coach at the club.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "COLORADO RAPIDS",
+        "MLS CUP"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7b9aca2275467ba2d1565cad7077c035": {
+      "timestamp": "2011-11",
+      "sentence": "He left the club when the Rapids parted company with Gary Smith in November 2011.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "GARY SMITH",
+        "RAPIDS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-57c51af52d8bdf02fcbc804af8821aea": {
+      "timestamp": "2012-03",
+      "sentence": "In March 2012, Guppy reunited with his old boss Martin O'Neill at Sunderland to work as a part-time coach, giving extra specialised sessions on technical work to Black Cats young players.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "MARTIN O ' NEILL",
+        "SUNDERLAND",
+        "PY",
+        "BLACK CATS",
+        "UP"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7ce98947ecc8c8df385eee4e65ef56c2": {
+      "timestamp": "2012",
+      "sentence": "A few months later he settled into the role on a full-time basis.",
+      "context": "Guppy had been working as a part-time coach at Sunderland since March 2012.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [],
+      "participants": "",
+      "location": ""
+    },
+    "event-0e795267c934c06b16530f16501d46b8": {
+      "timestamp": "2013-04",
+      "sentence": "In April 2013, Guppy followed O'Neill out of Sunderland as incoming manager Paolo Di Canio appointed his own coaching staff.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "UP",
+        "PAOLO DI CANIO",
+        "NEILL",
+        "SUNDERLAND"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e4ffadcb47e74f2d1964b9c4c58dd6b6": {
+      "timestamp": "2014",
+      "sentence": "In 2014, he joined O'Neill's coaching staff to specifically coach the wingers and strikers of the Republic of Ireland national side.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "O ' NEILL",
+        "REPUBLIC OF IRELAND"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b264b0cbb21ea6ce4665bd4ae9d7a615": {
+      "timestamp": "2018",
+      "sentence": "He helped former teammate Neil Aspin to coach Port Vale during 2018-19 pre-season.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "PORT VALE",
+        "NEIL ASPIN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-133238184ea37a7b5d09d29e24d8cfd3": {
+      "timestamp": "2018-11",
+      "sentence": "O'Neill was sacked by Ireland in November 2018 following relegation out of the UEFA Nations League B Group 3, and Guppy also lost his position.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "O ' NEILL",
+        "UEFA NATIONS LEAGUE",
+        "IRELAND"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-c416f526d267b7afb9c22b88b4fd213e": {
+      "timestamp": "2020-06",
+      "sentence": "In June 2020, Wilson joined non-league club Ilkeston Town in a player-coach role, following a three-year break from football.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "ILKESTON TOWN",
+        "WILSON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-8cb585d475a6dd435f1cb1ebdbb2e79c": {
+      "timestamp": "2019-11",
+      "sentence": "In November 2019, Pentney announced his retirement from playing football in order to take up a full-time position as head of academy goalkeeping at Ipswich Town.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "PENTNEY",
+        "IPSWICH TOWN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d4bc4bc91f9f382ab19c4495d23316e6": {
+      "timestamp": "2007",
+      "sentence": "He was the coach of Inglewood United in 2007.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "IN",
+        "GLEWOOD UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-3180a1396b0bf0bb82f981b50325cc06": {
+      "timestamp": "2008",
+      "sentence": "He was the coach of Perth boys school Hale Schools 1st XI Soccer side in 2008.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "PERTH",
+        "XI",
+        "HALE SCHOOLS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b978b9af6b400305ac00a6e0714c6ce0": {
+      "timestamp": "2015",
+      "sentence": "He was variously the coach of the Perth Glory NPL U20s team and the Perth Glory's Womens team between 2015 and 2020.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "PERTH GLORY",
+        "PERTH GLORY NPL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f3d632fb9629aefe4733fd95dcf639a1": {
+      "timestamp": "1963-10",
+      "sentence": "In October 1963 he returned to Tottenham Hotspur to become the assistant manager under Bill Nicholson.",
+      "context": "He remained with Bill Nicholson until Nicholson departed in August 1974.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BILL NICHOLSON",
+        "TOTTENHAM HOTSPUR"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2cd563a36bbbf7bc249c82ebde9160c4": {
+      "timestamp": "1974-08",
+      "sentence": "He remained with Bill Nicholson until Nicholson departed in August 1974.",
+      "context": "He had returned to Tottenham Hotspur as assistant manager in October 1963.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "NICHOLSON",
+        "BILL NICHOLSON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-dc4a7887a53c940963fbe339fc13edc8": {
+      "timestamp": "1974-09",
+      "sentence": "Baily also quit White Hart Lane the following month.",
+      "context": "This followed Bill Nicholson's departure from Tottenham Hotspur in August 1974.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "WHITE HART LANE",
+        "BAILY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-d186d90d894b116550d24aeafa7c9b39": {
+      "timestamp": "1993",
+      "sentence": "Following sixteen years of service, he had a testimonial match in 1993 between Spurs and Enfield on the day that Alan Sugar sacked Terry Venables as manager of Spurs.",
+      "context": "A large crowd turned up in order to protest against the sacking.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "TERRY VENABLES",
+        "ALAN SUGAR",
+        "ENFIELD",
+        "SPURS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2aaa759f923350f3d690702129ca65bc": {
+      "timestamp": "2010-10-13",
+      "sentence": "Eddie Baily died on 13 October 2010 at Welwyn Garden City after a short illness.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "EDDIE BAILY",
+        "WELWYN GARDEN CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-915dad14928f810f82fc0a37ffa226e8": {
+      "timestamp": "1952-12",
+      "sentence": "He was survived by wife, Elsie (married December 1952).",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "ELSIE"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-948a1b3e40044f2f35ae6d1923b459db": {
+      "timestamp": "2003",
+      "sentence": "Vilanova started his coaching career in 2003-04, being in charge of Tercera División side FC Palafrugell and suffering relegation to Primera Catalana.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "VILANOVA",
+        "ERA DIVISIÓN",
+        "TE",
+        "PRIMERA CATALANA",
+        "FC PALAFRUGELL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7b1d9a478913d2da13c8d2d902eb4dd2": {
+      "timestamp": "2008",
+      "sentence": "In the summer of 2008, after leading the reserves to promotion to Segunda División B, Vilanova and Guardiola were assigned to the Barcelona first team, replacing Dutch duo Frank Rijkaard and Johan Neeskens.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BARCELONA",
+        "DUTCH",
+        "JOHAN NEESKENS",
+        "FRANK RIJKAARD",
+        "GUARDIOLA",
+        "ILANOVA",
+        "SEGUNDA DIVISIÓN B"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e5ebb1501158c1bd7404725a5e500d56": {
+      "timestamp": "2012-04-27",
+      "sentence": "On 27 April 2012, at the press conference in which Barcelona confirmed Guardiola's departure, it was also announced that Vilanova would be his successor.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BARCELONA",
+        "GUARDIOLA",
+        "ILANOVA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-f622f9422f5b089029b32f24baa617a8": {
+      "timestamp": "2012-06-15",
+      "sentence": "On 15 June he signed a two-year contract.",
+      "context": "This followed the announcement that Vilanova would succeed Guardiola as Barcelona manager.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [],
+      "participants": "",
+      "location": ""
+    },
+    "event-9921894a5786418839f37591586c8638": {
+      "timestamp": "2012-11",
+      "sentence": "In November 2012, in a La Liga match Vilanova named an entire starting 11 of Barcelona academy graduates.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BARCELONA",
+        "LA LIGA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-231f3a8f533003327d1fea7ca5ff4123": {
+      "timestamp": "2012-12-19",
+      "sentence": "On 19 December 2012, Barcelona announced that Vilanova was suffering from parotid gland cancer for the second time.",
+      "context": "He was first diagnosed on 22 November of the previous year.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BARCELONA",
+        "ILANOVA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-fe7701e60c14b1f1cb31171db634f30d": {
+      "timestamp": "2012-12-20",
+      "sentence": "Vilanova underwent surgery on 20 December 2012.",
+      "context": "This followed Barcelona's announcement that he was suffering from parotid gland cancer.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [],
+      "participants": "",
+      "location": ""
+    },
+    "event-4f795ee206377655c68842af66e814c3": {
+      "timestamp": "2013-03",
+      "sentence": "Vilanova returned to the bench in late March 2013.",
+      "context": "Assistant Jordi Roura had taken over as head coach during Vilanova's absence.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "VILANOVA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-718a4a5759002e9f35148c2f696f78fe": {
+      "timestamp": "2013-07-19",
+      "sentence": "On 19 July 2013, Vilanova resigned as Barcelona manager as he relapsed from his condition.",
+      "context": "He stated that the related treatment was not compatible with the status of a professional manager.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "BARCELONA",
+        "ILANOVA"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-da6f936297340a852d344598154cc409": {
+      "timestamp": "2014-04-25",
+      "sentence": "Vilanova died on 25 April 2014, due to complications from cancer, at the age of 45 after suffering a relapse the previous week.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [],
+      "participants": "",
+      "location": ""
+    },
+    "event-4ac59f25ac62f0236c46fb83f6cc32e3": {
+      "timestamp": "2018-03",
+      "sentence": "After retiring at the end of the 2017 season, Hines remained with Orlando City and joined the Orlando City Youth Soccer coaching staff in March 2018.",
+      "context": "",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "ORLANDO CITY",
+        "ORLANDO CITY YOUTH SOCCER",
+        "HI"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-62f10b36775f250e360f672dfde4e5ed": {
+      "timestamp": "2020-05",
+      "sentence": "In May 2020, Hines was named as an assistant coach of Orlando City's NWSL affiliate, Orlando Pride.",
+      "context": "Prior to the appointment, he had already been working with the Pride in training sessions and in player scouting.",
+      "source_id": "chunk-e9b1fb3ea21a8c96601d73bfdd8b196f",
+      "entities_involved": [
+        "SL",
+        "ORLANDO CITY",
+        "ORLANDO PRIDE",
+        "HI"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b5559ac3986fcc3a373e2a7c5dfafd31": {
+      "timestamp": "2016-06-13",
+      "sentence": "On 13 June 2016, Flahavan retired from playing when Flahavan was appointed the goalkeeper coach of Leeds United as part of the backroom staff to new head coach Garry Monk.",
+      "context": "Flahavan had a loan spell at Leeds during his playing days and was a former teammate of Monk during his Southampton days.",
+      "source_id": "chunk-df84c6809080fc5dac33423e1013c40f",
+      "entities_involved": [
+        "GARRY MONK",
+        "FLAHAVAN",
+        "LEEDS UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2a05b132eb59895553c461554a48851c": {
+      "timestamp": "2017-06-21",
+      "sentence": "On 21 June 2017, Flahavan followed Monk to Middlesbrough after Monk resigned as Leeds manager.",
+      "context": "",
+      "source_id": "chunk-df84c6809080fc5dac33423e1013c40f",
+      "entities_involved": [
+        "LEEDS",
+        "MIDDLESBROUGH",
+        "FLAHAVAN",
+        "MONK"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-91135f50a8fd2b4cc40126e0576bbbce": {
+      "timestamp": "2018-03-04",
+      "sentence": "Flahavan was appointed goalkeeping coach of EFL Championship club Birmingham City when Monk took over as manager on 4 March 2018.",
+      "context": "",
+      "source_id": "chunk-df84c6809080fc5dac33423e1013c40f",
+      "entities_involved": [
+        "EFL CHAMPIONSHIP",
+        "FLAHAVAN",
+        "MONK",
+        "BIRMINGHAM CITY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0ff86f16f57de7d5f2932a59ed082027": {
+      "timestamp": "2020-08-12",
+      "sentence": "On 12 August 2020, Flahavan joined Sheffield Wednesday as their goalkeeper coach.",
+      "context": "",
+      "source_id": "chunk-df84c6809080fc5dac33423e1013c40f",
+      "entities_involved": [
+        "SHEFFIELD WEDNESDAY",
+        "FLAHAVAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-b5086722c2f979a267bc22046e4b8208": {
+      "timestamp": "2020-11-09",
+      "sentence": "Flahavan left Sheffield Wednesday on 9 November 2020, when Garry Monk left the club.",
+      "context": "",
+      "source_id": "chunk-df84c6809080fc5dac33423e1013c40f",
+      "entities_involved": [
+        "SHEFFIELD WEDNESDAY",
+        "GARRY MONK",
+        "FLAHAVAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-89f3d32882b125abd11ee308dd157764": {
+      "timestamp": "1960-04-08",
+      "sentence": "Pat Duncan was born on April 8, 1960.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "PAT DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1501460650450f30b95042837694b17f": {
+      "timestamp": "1998",
+      "sentence": "Pat Duncan served as leader of the Yukon Liberal Party from 1998 to 2005.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "YUKON LIBERAL PARTY",
+        "PAT DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-586eba84e70f05ffa03d7c13a60855b1": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan served as the sixth Premier of Yukon from 2000 until 2002.",
+      "context": "Pat Duncan was the first Liberal premier of the Yukon and the first female premier in the Yukon.",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "PAT DUNCAN",
+        "YUKON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a86a5a39786b5b6ff8e2f95f39587acd": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan became the first Liberal premier of the Yukon in 2000.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "YUKON",
+        "PAT DUNCAN",
+        "LIBERAL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a247b9955a9f46ae0776e09a86332e79": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan became the first female premier in the Yukon in 2000.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "PAT DUNCAN",
+        "YUKON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-3cfa211935afcd824a7373f1ff5d158e": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan became the second woman in Canadian history to win the premiership of a province or territory through a general election in 2000.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "CANADIAN",
+        "PAT DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9fb762754ad94d6f34f68acc4e47fa8c": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan became the first woman in Canadian history to win a premiership by defeating an incumbent premier in 2000.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "CANADIAN",
+        "PAT DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-a885d44a7e618068f13cc3d5808827cb": {
+      "timestamp": "2000",
+      "sentence": "Pat Duncan became the first woman in Canadian history to win a premiership by defeating a male opponent in 2000.",
+      "context": "",
+      "source_id": "chunk-63fdea7ad26c2f25bd1b0817f2a54be3",
+      "entities_involved": [
+        "CANADIAN",
+        "PAT DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-dfeec3bfa52926677f32d01e712d2b04": {
+      "timestamp": "2002",
+      "sentence": "The Yukon general election was held in 2002.",
+      "context": "",
+      "source_id": "chunk-5c7725c96c96b93f6bdaeb587c605795",
+      "entities_involved": [
+        "YUKON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-4db0159c4cd778cfe53aa6b1ed1b563c": {
+      "timestamp": "2000",
+      "sentence": "The Yukon general election was held in 2000.",
+      "context": "",
+      "source_id": "chunk-5c7725c96c96b93f6bdaeb587c605795",
+      "entities_involved": [
+        "YUKON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-7a21b9d17f3cf08e96b48468f0a07de6": {
+      "timestamp": "1996",
+      "sentence": "The Yukon general election was held in 1996.",
+      "context": "",
+      "source_id": "chunk-5c7725c96c96b93f6bdaeb587c605795",
+      "entities_involved": [
+        "YUKON"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-2b0ea51e994cecba17fad3bb6b645257": {
+      "timestamp": "2015",
+      "sentence": "Pentney joined Maidenhead United in 2015.",
+      "context": "This followed a brief spell with Braintree Town where he made two appearances.",
+      "source_id": "chunk-5719cbc6575a769fbd7f733d9aa42bd1",
+      "entities_involved": [
+        "MAIDENHEAD UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-bbfee323e30d32cc07606ff08636c1bd": {
+      "timestamp": "2017",
+      "sentence": "Maidenhead United achieved promotion to the National League in 2017.",
+      "context": "Pentney was ever-present over the three seasons including this promotion.",
+      "source_id": "chunk-5719cbc6575a769fbd7f733d9aa42bd1",
+      "entities_involved": [
+        "NATIONAL LEAGUE",
+        "MAIDENHEAD UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-e10357cde9f1c8e856c23befae39784a": {
+      "timestamp": "2018-10",
+      "sentence": "Pentney was sent off at Havant & Waterlooville in October 2018.",
+      "context": "This ended his streak of 148 consecutive league games playing the full 90 minutes.",
+      "source_id": "chunk-5719cbc6575a769fbd7f733d9aa42bd1",
+      "entities_involved": [],
+      "participants": "",
+      "location": ""
+    },
+    "event-32e5090f31ab494a0194e8d2e2ff13a3": {
+      "timestamp": "2019",
+      "sentence": "Pentney left Maidenhead United at the end of the 2018–19 season.",
+      "context": "",
+      "source_id": "chunk-5719cbc6575a769fbd7f733d9aa42bd1",
+      "entities_involved": [
+        "MAIDENHEAD UNITED"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-414bc491f81be13ac8022080e023ba8e": {
+      "timestamp": "1989-10-29",
+      "sentence": "Carl Benjamin Pentney was born on 29 October 1989.",
+      "context": "",
+      "source_id": "chunk-ab54527ab312b4cde39ab32bd3024804",
+      "entities_involved": [
+        "CARL BENJAMIN PENTNEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-1945315ed131d5333a7d36bfcd70334a": {
+      "timestamp": "static",
+      "sentence": "Carl Benjamin Pentney played as a goalkeeper as an English former professional footballer.",
+      "context": "",
+      "source_id": "chunk-ab54527ab312b4cde39ab32bd3024804",
+      "entities_involved": [
+        "ENGLISH",
+        "CARL BENJAMIN PENTNEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-5466e81d53172f7eeaf151de37ddf3d8": {
+      "timestamp": "static",
+      "sentence": "Carl Benjamin Pentney is currently the head of academy goalkeeping at Ipswich Town.",
+      "context": "",
+      "source_id": "chunk-ab54527ab312b4cde39ab32bd3024804",
+      "entities_involved": [
+        "IPSWICH TOWN",
+        "CARL BENJAMIN PENTNEY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-22517c245bdbb11b3c9340b7e176029c": {
+      "timestamp": "1996",
+      "sentence": "Duncan was first elected to the Yukon Legislative Assembly in the 1996 general election.",
+      "context": "Duncan was elected as a Liberal to represent the Porter Creek South riding, a riding located in Whitehorse.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "YUKON LEGISLATIVE ASSEMBLY",
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-3898b67398a364de8ba40694afb81fdc": {
+      "timestamp": "1996",
+      "sentence": "In the 1996 general election, Piers McDonald (New Democratic Party) won a majority government.",
+      "context": "Duncan was one of three Liberals elected in this election.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "PIER",
+        "NEW DEMOCRATIC PARTY",
+        "S MCDONALD"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-01886699d38c1f30ca6de6e2c335c69b": {
+      "timestamp": "1998",
+      "sentence": "In 1998, Duncan was elected leader of the Yukon Liberal Party.",
+      "context": "",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "YUKON LIBERAL PARTY",
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-fccac3a04c2415de62a7f72fd7e34631": {
+      "timestamp": "1998",
+      "sentence": "From 1998-2000, Duncan served as the Leader of the Official Opposition in the legislature.",
+      "context": "",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-deb3ae478875f9317cabdb5f095fe4bc": {
+      "timestamp": "2000",
+      "sentence": "In the 2000 general election, Duncan led the Yukon Liberal Party to a majority government, defeating New Democratic incumbent Piers McDonald.",
+      "context": "The Liberals were elected in 10 ridings and received 42.7% of the popular vote.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "PIER",
+        "NEW DEMOCRATIC",
+        "S MCDONALD",
+        "DUNCAN",
+        "YUKON LIBERAL PARTY"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-0ea789f217065fec2de92c180b0ed225": {
+      "timestamp": "2002",
+      "sentence": "Early in 2002, the Liberal majority was reduced to a minority after the defection of three Liberal MLAs: Mike McLarnon, Don Roberts and Wayne Jim.",
+      "context": "The catalyst for the defections was reported to be Duncan's allegedly heavy-handed and secretive leadership style.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "WAYNE JIM",
+        "MIKE MCLARNON",
+        "DON ROBERTS",
+        "LIBERAL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-fdd5cd3297712b699f3c0522d32314ac": {
+      "timestamp": "2002-10-04",
+      "sentence": "On October 4, 2002, Duncan called a general election for November 4, 2002.",
+      "context": "This was only two years into Duncan's five-year term, and the rationale was to achieve certainty in the legislature.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-58b93d5caa7369d826361541b20a848c": {
+      "timestamp": "2002-11-04",
+      "sentence": "The Yukon Liberals were reduced to only one seat after the November 4, 2002 election - Duncan's own riding of Porter Creek South.",
+      "context": "Yukon Party leader Dennis Fentie, a former NDP MLA, led his new party to victory.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "PORTER CREEK SOUTH",
+        "DUNCAN",
+        "YUKON LIBERALS"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-9a5117bc8b856b525f9b5299648d2852": {
+      "timestamp": "2005",
+      "sentence": "At the 2005 Yukon Liberal Party leadership convention, Duncan was defeated by Arthur Mitchell by a margin of 357 votes to 303.",
+      "context": "",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "YUKON LIBERAL PARTY",
+        "DUNCAN",
+        "ARTHUR MITCHELL"
+      ],
+      "participants": "",
+      "location": ""
+    },
+    "event-13c5a299e0f890488b49d3c186012b79": {
+      "timestamp": "2006",
+      "sentence": "Duncan did not seek re-election in the 2006 general election.",
+      "context": "Duncan cited health concerns for not seeking re-election.",
+      "source_id": "chunk-b1d39645ebe422d7c8a324e03b08f22b",
+      "entities_involved": [
+        "DUNCAN"
+      ],
+      "participants": "",
+      "location": ""
+    }
+  }
+}

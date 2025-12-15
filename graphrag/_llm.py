@@ -24,7 +24,10 @@ global_amazon_bedrock_async_client = None
 def get_openai_async_client_instance():
     global global_openai_async_client
     if global_openai_async_client is None:
-        global_openai_async_client = AsyncOpenAI()
+        global_openai_async_client = AsyncOpenAI(
+            base_url="https://api.deepseek.com/v1",  
+            api_key=os.getenv("DEEPSEEK_API_KEY")  # 需要设置DeepSeek API密钥
+        )
     return global_openai_async_client
 
 
@@ -155,7 +158,7 @@ async def gpt_4o_complete(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await openai_complete_if_cache(
-        "gpt-3.5-turbo",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
@@ -167,7 +170,7 @@ async def gpt_4o_mini_complete(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await openai_complete_if_cache(
-        "gpt-4o-mini",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
@@ -213,7 +216,7 @@ async def amazon_bedrock_embedding(texts: list[str]) -> np.ndarray:
 async def openai_embedding(texts: list[str]) -> np.ndarray:
     openai_async_client = get_openai_async_client_instance()
     response = await openai_async_client.embeddings.create(
-        model="text-embedding-3-small", input=texts, encoding_format="float"
+        model="deepseek-chat", input=texts, encoding_format="float"
     )
     return np.array([dp.embedding for dp in response.data])
 
@@ -260,7 +263,7 @@ async def azure_gpt_4o_complete(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await azure_openai_complete_if_cache(
-        "gpt-4o",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
@@ -272,7 +275,7 @@ async def azure_gpt_4o_mini_complete(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await azure_openai_complete_if_cache(
-        "gpt-4o-mini",
+        "deepseek-chat",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,

@@ -67,7 +67,9 @@ class EventRelationshipConfig:
 @dataclass 
 class ExtractionConfig:
     """Configuration for event extraction pipeline"""
-    model_path: str = "./models"
+    model_path: str = field(
+        default_factory=lambda: str(Path(__file__).resolve().parents[1] / "models")
+    )
     ner_model_name: str = "dslim_bert_base_ner"
     ner_device: str = "cuda:0"
     ner_batch_size: int = 32
@@ -431,7 +433,7 @@ async def extract_events(
     
     # Convert legacy config to modern config objects
     config = ExtractionConfig(
-        model_path=global_config.get("model_path", "./models"),
+        model_path=global_config.get("model_path", "../models"),
         ner_model_name=global_config.get("ner_model_name", "dslim_bert_base_ner"),
         ner_device=global_config.get("ner_device", "cuda:0"),
         ner_batch_size=global_config.get("ner_batch_size", 32),
@@ -575,10 +577,10 @@ async def extract_events(
             for event in combined_event_data.get("events", []):
                 try:
                     if not isinstance(event, dict):
-                        logger.warning(f"Skipping non-dict event in chunk {chunk_key}: {type(event)}")
+                        logger.warning(f"Skipping non-dict event in chunk {extractionchunk_key}: {type(event)}")
                         continue
                         
-                    sentence = event.get('sentence', '')
+                    sentence = event.get('sentence', '')#TODO:SCextraction
                     if not sentence or not isinstance(sentence, str):
                         logger.warning(f"Skipping event with invalid sentence in chunk {chunk_key}: '{sentence}'")
                         continue
