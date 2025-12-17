@@ -72,7 +72,7 @@ class NetworkXStorage(BaseGraphStorage):
         return nx.Graph()
 
     @staticmethod
-    def write_nx_graph(graph: nx.Graph, file_name):
+    def write_nx_graph(graph: nx.Graph, file_name):##TODO写入ml图数据库
         try:
             logger.info(
                 f"Writing graph with {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges"

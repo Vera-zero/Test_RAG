@@ -4,7 +4,10 @@ import asyncio
 import tiktoken
 import datetime
 import time
+import requests
 from dateutil import parser as date_parser
+from .WAT import WATAnnotation
+
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -39,6 +42,9 @@ from .base import (
     BaseVectorStorage,
     TextChunkSchema,
 )
+
+GCUBE_TOKEN = '07e1bd33-c0f5-41b0-979b-4c9a859eec3f-843339462'
+
 from .prompt import GRAPH_FIELD_SEP, PROMPTS
 import bisect  # TODO: might not need this everywhere, check usage later
 
@@ -577,7 +583,7 @@ async def extract_events(
             for event in combined_event_data.get("events", []):
                 try:
                     if not isinstance(event, dict):
-                        logger.warning(f"Skipping non-dict event in chunk {extractionchunk_key}: {type(event)}")
+                        logger.warning(f"Skipping non-dict event in chunk {chunk_key}: {type(event)}")
                         continue
                         
                     sentence = event.get('sentence', '')#TODO:SCextraction
@@ -589,19 +595,20 @@ async def extract_events(
                     if context and not isinstance(context, str):
                         context = ''
                     
-                    raw_time = event.get('time', 'static')
-                    try:
-                        normalized_time = normalize_timestamp(raw_time)
-                    except Exception:
-                        normalized_time = 'static'
+                    time_point = event.get('time_point', '').strip()
+                    time_interval = event.get('time_interval', '').strip()
+                    time_static = event.get('time_static', False)
+                    
+                    event_id = compute_mdhash_id(f"{sentence}-{context}", prefix="event-")
 
-                    event_id = compute_mdhash_id(f"{sentence}-{normalized_time}", prefix="event-")
- 
+
                     event_obj = {
                         "event_id": event_id,
-                        "timestamp": normalized_time,
                         "sentence": sentence,
                         "context": context,
+                        "time_point":time_point,
+                        "time_interval":time_interval,
+                        "time_static": time_static,
                         "source_id": chunk_key,
                         "entities_involved": []  # Temporarily empty, will be filled later by NER
                     }
@@ -632,10 +639,8 @@ async def extract_events(
 
     event_extraction_start = time.time()
     try:
-        event_results = await asyncio.gather(
-            *[_process_events_only(c) for c in ordered_chunks],
-            return_exceptions=True
-        )
+        tasks = [_process_events_only(c) for c in ordered_chunks]
+        event_results = await asyncio.gather(*tasks, return_exceptions=True)
         logger.info(f"\nEvent extraction completed, processing {len(event_results)} results")
         
         # Merge all event results
@@ -657,10 +662,10 @@ async def extract_events(
     phase_times["event_extraction"] = time.time() - event_extraction_start
     
     ner_extraction_start = time.time()
-    logger.info("=== NER ENTITY EXTRACTION PHASE ===")
+    logger.info("=== WAT ENTITY EXTRACTION PHASE ===")
     try:
-        all_maybe_events = ner_extractor.extract_entities_from_events(all_maybe_events)
-        logger.info("NER entity extraction completed")
+        all_maybe_events, maybe_entities = await ner_extractor.extract_entities_from_events(all_maybe_events)
+        logger.info("WAT entity extraction completed")
         
         # Build entity node data from entities extracted by NER
         all_entities = set()
@@ -669,10 +674,10 @@ async def extract_events(
                 entities = event_obj.get("entities_involved", [])
                 all_entities.update(entities)
         
-        logger.info(f"NER extraction complete: {len(all_entities)} unique entities extracted")
+        logger.info(f"wat extraction complete: {len(all_entities)} unique entities extracted")
         
     except Exception as e:
-        logger.error(f"Error during NER extraction: {e}")
+        logger.error(f"Error during wat extraction: {e}")
         return None, {"failed": True, "phase": "ner_extraction"}
     
     phase_times["ner_extraction"] = time.time() - ner_extraction_start
@@ -721,7 +726,9 @@ async def extract_events(
             events_for_vdb[dp["event_id"]] = {
                 "content": event_content_for_vdb,
                 "event_id": dp["event_id"],
-                "timestamp": dp["timestamp"],
+                "time_point": dp["time_point"],
+                "time_interval": dp["time_interval"],
+                "time_static": dp["time_static"],
                 "sentence": dp["sentence"],
                 "context": dp.get("context", ""),
                 "source_id": dp.get("source_id", "")
@@ -808,17 +815,21 @@ async def _merge_events_then_upsert(
     dyg_inst: BaseGraphStorage,
     global_config: dict,
 ):
-    already_timestamps = []
     already_sentences = []
     already_contexts = []
     already_source_ids = []
     already_entities_involved = []
+    already_time_points = []
+    already_time_intervals = []
+    already_time_statics = []
 
     already_event = await dyg_inst.get_node(event_id)
     if already_event is not None:
-        already_timestamps.append(already_event.get("timestamp", ""))
         already_sentences.append(already_event.get("sentence", ""))
         already_contexts.append(already_event.get("context", ""))
+        already_time_points.append(already_event.get("time_point", ""))
+        already_time_intervals.append(already_event.get("time_interval", ""))
+        already_time_statics.append(already_event.get("time_static", False))
         already_source_ids.extend(
             split_string_by_multi_markers(already_event.get("source_id", ""), [GRAPH_FIELD_SEP])
         )
@@ -827,9 +838,15 @@ async def _merge_events_then_upsert(
             already_entities_involved.extend(existing_entities)
         elif isinstance(existing_entities, str):
             already_entities_involved.extend(existing_entities.split(",") if existing_entities else [])
-
-    timestamps = [dp.get("timestamp", "") for dp in events_data] + already_timestamps
-    timestamp = sorted(Counter(timestamps).items(), key=lambda x: x[1], reverse=True)[0][0] if timestamps else ""
+    time_points = [dp.get("time_point", "") for dp in events_data] + already_time_points
+    time_point = max(time_points, key=len) if time_points else ""
+    
+    time_intervals = [dp.get("time_interval", "") for dp in events_data] + already_time_intervals
+    time_interval = max(time_intervals, key=len) if time_intervals else ""
+    
+    # 检查是否有任何事件标记为静态时间
+    time_statics = [dp.get("time_static", False) for dp in events_data] + already_time_statics
+    time_static = any(time_statics)
     
     sentences = [dp.get("sentence", "") for dp in events_data] + already_sentences
     sentence = max(sentences, key=len) if sentences else ""
@@ -853,7 +870,9 @@ async def _merge_events_then_upsert(
     )
     
     event_data = dict(
-        timestamp=timestamp,
+        time_point=time_point,
+        time_interval=time_interval,
+        time_static=time_static,
         sentence=sentence,
         context=context,
         source_id=source_id,
@@ -871,7 +890,7 @@ async def _merge_events_then_upsert(
     return event_data
 
 @monitor_performance
-async def _merge_event_relations_then_upsert(
+async def _merge_event_relations_then_upsert(##TODO_MERGE
     event_id: str,
     events_data: list[dict],
     dyg_inst: BaseGraphStorage,
@@ -1045,6 +1064,55 @@ class BatchNERExtractor:
             logger.error(f"Failed to load NER model: {e}", exc_info=True)
             raise
     
+    def extract_entities_wat(self, wat_annotations: List[List[WATAnnotation]]) -> List[List[str]]:
+        """
+        Extract entities from WAT annotations.
+        
+        Args:
+            wat_annotations: List of WAT annotations for each sentence.
+        
+        Returns:
+            List of lists of entity strings.
+        """
+        entities = []
+        for annotations in wat_annotations:
+            sentence_entities = [ann.wiki_title for ann in annotations]
+            entities.append(sentence_entities)
+        return entities
+
+    async def extract_wat_batch(self, sentences: List[str]) -> List[List[WATAnnotation]]:
+        if not sentences:
+            return []
+        
+        try:
+            valid_sentences = []
+            sentence_indices = []
+            for i, sentence in enumerate(sentences):
+                if sentence and isinstance(sentence, str) and sentence.strip():
+                    valid_sentences.append(sentence.strip())
+                    sentence_indices.append(i)
+            
+            if not valid_sentences:
+                return [[] for _ in sentences]
+            
+            logger.info(f"Processing {len(valid_sentences)} sentences with WAT entity linking")
+            
+            all_annotations = [[] for _ in sentences]
+            
+            for idx, (sentence_idx, sentence) in enumerate(zip(sentence_indices, valid_sentences)):
+                logger.debug(f"Processing sentence {idx} for WAT entity linking")
+                annotations = await self._wat_entity_linking(sentence)
+                all_annotations[sentence_idx] = annotations
+            
+            total_annotations = sum(len(annotations) for annotations in all_annotations)
+            logger.info(f"WAT entity linking completed: {total_annotations} annotations from {len(valid_sentences)} sentences")
+            
+            return all_annotations
+            
+        except Exception as e:
+            logger.error(f"Error during batch WAT entity linking: {e}", exc_info=True)
+            return [[] for _ in sentences]
+        
     def extract_entities_batch(self, sentences: List[str]) -> List[List[str]]:
         if not sentences:
             return []
@@ -1069,6 +1137,7 @@ class BatchNERExtractor:
             for idx, (sentence_idx, sentence_entities) in enumerate(zip(sentence_indices, ner_results)):
                 logger.debug(f"Processing sentence {idx}: found {len(sentence_entities)} raw entities")
                 entities = self._process_ner_result(sentence_entities)
+                logger.info(f"Extracted {len(entities)} entities from sentence {idx}")
                 all_entities[sentence_idx] = entities
             
             total_extracted = sum(len(entities) for entities in all_entities)
@@ -1112,8 +1181,8 @@ class BatchNERExtractor:
             logger.error(f"Error processing NER result: {e}")
         
         return entities
-    
-    def extract_entities_from_events(self, events_data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+
+    async def extract_entities_from_events(self, events_data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         if not events_data:
             return events_data
         
@@ -1128,19 +1197,42 @@ class BatchNERExtractor:
                     event_mapping.append((event_id, idx))
         
         if not sentences:
-            logger.warning("No valid sentences found for NER extraction")
+            logger.warning("No valid sentences")
             return events_data
         
-        logger.info(f"Extracting entities from {len(sentences)} event sentences")
         
-        batch_entities = self.extract_entities_batch(sentences)
+        logger.info(f"Extracting entities from {len(sentences)} event sentences")
+        wat_annotations = await self.extract_wat_batch(sentences)
+        wat_entities = self.extract_entities_wat(wat_annotations)
         
         # Map entities back to their events
-        for (event_id, event_idx), entities in zip(event_mapping, batch_entities):
+        for (event_id, event_idx), entities in zip(event_mapping, wat_entities):
             if event_id in events_data and event_idx < len(events_data[event_id]):
                 events_data[event_id][event_idx]["entities_involved"] = entities
         
-        total_entities = sum(len(entities) for entities in batch_entities)
-        logger.info(f"NER extraction completed: {total_entities} entities extracted")
+        total_entities = sum(len(entities) for entities in wat_entities)
+        logger.info(f"wat extraction completed: {total_entities} entities extracted")
         
-        return events_data
+        return events_data, wat_entities
+
+    async def _wat_entity_linking(self, text: str):
+        # Main method, text annotation with WAT entity linking system
+        wat_url = 'https://wat.d4science.org/wat/tag/tag'
+        payload = [("gcube-token", GCUBE_TOKEN),
+                   ("text", text),
+                   ("lang", 'en'),
+                   ("tokenizer", "nlp4j"),
+                   ('debug', 9),
+                   ("method",
+                    "spotter:includeUserHint=true:includeNamedEntity=true:includeNounPhrase=true,prior:k=50,filter-valid,centroid:rescore=true,topk:k=5,voting:relatedness=lm,ranker:model=0046.model,confidence:model=pruner-wiki.linear")]
+        # TODO: maybe config it
+        retry_count = 3
+        for attempt in range(retry_count):
+            try:
+                response = requests.get(wat_url, params=payload)
+                return [WATAnnotation(**annotation) for annotation in response.json()['annotations']]
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Retry attempt {attempt + 1} failed: {e}")
+                if attempt == retry_count - 1:
+                    logger.error("All retry attempts failed. Exiting.")
+            return []
