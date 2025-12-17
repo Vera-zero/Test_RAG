@@ -860,67 +860,116 @@ class GraphRAG:
             if isinstance(string_or_strings, str):
                 string_or_strings = [string_or_strings]
             # ---------- new docs
-            new_docs = {
-                compute_mdhash_id(c.strip(), prefix="doc-"): {"content": c.strip()}
-                for c in string_or_strings
-            }
-            _add_doc_keys = await self.full_docs.filter_keys(list(new_docs.keys()))
-            new_docs = {k: v for k, v in new_docs.items() if k in _add_doc_keys}
-            if not len(new_docs):
-                logger.warning(f"All docs are already in the storage")
-                await self._insert_done()
-                return
-            logger.info(f"[New Docs] inserting {len(new_docs)} docs")
 
+            # 检查是否已存在文档文件
+            docs_cache_file = os.path.join(self.working_dir, "kv_store_full_docs.json")
+            new_docs = {}
+
+            if os.path.exists(docs_cache_file) and os.path.getsize(docs_cache_file) > 2:
+             # 加载已存在的文档
+                logger.info(f"Loading docs from cache file: {docs_cache_file}")
+                with open(docs_cache_file, 'r', encoding='utf-8') as f:
+                    new_docs = json.load(f)
+                logger.info(f"[Cached Docs] loaded {len(new_docs)} docs from cache")
+            else:
+                new_docs = {
+                    compute_mdhash_id(c.strip(), prefix="doc-"): {"content": c.strip()}
+                    for c in string_or_strings
+                }
+                _add_doc_keys = await self.full_docs.filter_keys(list(new_docs.keys()))
+                new_docs = {k: v for k, v in new_docs.items() if k in _add_doc_keys}
+                if not len(new_docs):
+                    logger.warning(f"All docs are already in the storage")
+                    await self._insert_done()
+                    return
+                logger.info(f"[New Docs] inserting {len(new_docs)} docs")
+        
+                # 立即存储新文档
+                await self.full_docs.upsert(new_docs)
+                # 立即提交文档存储
+                await self.full_docs.index_done_callback()
             # ---------- chunking
-            inserting_chunks = get_chunks(
-                new_docs=new_docs,
-                chunk_func=self.chunk_func,
-                overlap_token_size=self.chunk_overlap_token_size,
-                max_token_size=self.chunk_token_size,
-            )
+            chunks_cache_file = os.path.join(self.working_dir, "kv_store_text_chunks.json")
+            inserting_chunks = {}
+            if os.path.exists(chunks_cache_file) and os.path.getsize(chunks_cache_file) > 2:
+                # 加载已存在的块
+                logger.info(f"Loading chunks from cache file: {chunks_cache_file}")
+                with open(chunks_cache_file, 'r', encoding='utf-8') as f:
+                    inserting_chunks = json.load(f)
+                logger.info(f"[Cached Chunks] loaded {len(inserting_chunks)} chunks from cache")
+            else:
+                inserting_chunks = get_chunks(
+                    new_docs=new_docs,
+                    chunk_func=self.chunk_func,
+                    overlap_token_size=self.chunk_overlap_token_size,
+                    max_token_size=self.chunk_token_size,
+                )
 
-            _add_chunk_keys = await self.text_chunks.filter_keys(
-                list(inserting_chunks.keys())
-            )
-            inserting_chunks = {
-                k: v for k, v in inserting_chunks.items() if k in _add_chunk_keys
-            }
-            if not len(inserting_chunks):
-                logger.warning(f"All chunks are already in the storage")
-                await self._insert_done()
-                return
-            logger.info(f"[New Chunks] inserting {len(inserting_chunks)} chunks")
+                _add_chunk_keys = await self.text_chunks.filter_keys(
+                    list(inserting_chunks.keys())
+                )
+                inserting_chunks = {
+                    k: v for k, v in inserting_chunks.items() if k in _add_chunk_keys
+                }
+                if not len(inserting_chunks):
+                    logger.warning(f"All chunks are already in the storage")
+                    await self._insert_done()
+                    return
+                logger.info(f"[New Chunks] inserting {len(inserting_chunks)} chunks")
+                # 立即存储新块
+                await self.text_chunks.upsert(inserting_chunks)
+                # 立即提交块存储
+                await self.text_chunks.index_done_callback()
 
             # ---------- event extraction
             logger.info("[Event Extraction]...")
-            maybe_new_dyg, extraction_stats = await extract_events(
-                inserting_chunks,
-                dyg_inst=self.event_dynamic_graph,
-                events_vdb = self.events_vdb,
-                global_config={**self.get_config_dict(), "events_vdb": self.events_vdb},
-                using_amazon_bedrock=self.using_amazon_bedrock,
-            )
-            self.extraction_stats = extraction_stats
-            
-            # update dynamic event graph
-            if maybe_new_dyg is not None:
-                self.event_dynamic_graph = maybe_new_dyg
-                logger.info(f"Updated dynamic event graph")
+            # 检查是否已存在事件图文件且不为空
+            graph_file = os.path.join(self.working_dir, "graph_event_dynamic_graph.graphml")
+            if os.path.exists(graph_file) and os.path.getsize(graph_file) > 2:
+                # 直接跳过事件提取，因为图文件已经存在且不为空
+                logger.info(f"Event graph already exists at {graph_file}, skipping extraction")
+                # 重新加载图数据以确保内存中的图是最新的
+                preloaded_graph = NetworkXStorage.load_nx_graph(graph_file)
+                if preloaded_graph is not None:
+                    self.event_dynamic_graph._graph = preloaded_graph
+                    logger.info(f"Reloaded graph from {graph_file} with {preloaded_graph.number_of_nodes()} nodes, {preloaded_graph.number_of_edges()} edges")
+                else:
+                    logger.warning(f"Failed to reload graph from {graph_file}, proceeding with extraction")
+                    # 如果加载失败，则继续执行提取
+                    await self._perform_event_extraction(inserting_chunks)
             else:
-                logger.warning("No new events found")
-                await self._insert_done()
-                return
-            
+                # 执行事件提取
+                await self._perform_event_extraction(inserting_chunks)
+        
             torch.cuda.empty_cache()
             time.sleep(2)
-           
-            # ---------- commit upsertings
-            await self.full_docs.upsert(new_docs)
-            await self.text_chunks.upsert(inserting_chunks)
+       
         finally:
             await self._insert_done()
 
+
+    async def _perform_event_extraction(self, inserting_chunks):
+        """执行事件提取的核心逻辑"""
+        maybe_new_dyg, extraction_stats = await extract_events(
+            inserting_chunks,
+            dyg_inst=self.event_dynamic_graph,
+            events_vdb = self.events_vdb,
+            global_config={**self.get_config_dict(), "events_vdb": self.events_vdb},
+            using_amazon_bedrock=self.using_amazon_bedrock,
+        )
+        self.extraction_stats = extraction_stats
+    
+        # update dynamic event graph
+        if maybe_new_dyg is not None:
+            self.event_dynamic_graph = maybe_new_dyg
+            logger.info(f"Updated dynamic event graph")
+            # 立即提交事件图存储
+            await self.event_dynamic_graph.index_done_callback()
+        else:
+            logger.warning("No new events found")
+            await self._insert_done()
+            return
+        
     async def _insert_start(self):
         tasks = []
         for storage_inst in [
