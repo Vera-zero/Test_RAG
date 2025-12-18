@@ -190,6 +190,9 @@ class NetworkXStorage(BaseGraphStorage):
     async def get_node(self, node_id: str) -> Union[dict, None]:
         return self._graph.nodes.get(node_id)
     
+    async def get_node_by_wiki(self, wiki_id: str) -> Union[dict, None]:
+        return self._graph.wiki.get(wiki_id)
+    
     async def get_all_nodes(self) -> dict[str, dict]:
         """
         Get all nodes and their data from the graph
@@ -198,9 +201,13 @@ class NetworkXStorage(BaseGraphStorage):
             A dictionary containing all node IDs and their data
         """
         return dict(self._graph.nodes(data=True))
-    
+
     async def get_nodes_batch(self, node_ids: list[str]) -> dict[str, Union[dict, None]]:
         return await asyncio.gather(*[self.get_node(node_id) for node_id in node_ids])
+
+    async def get_nodes_by_wiki_batch(self, node_ids: list[str]) -> dict[str, Union[dict, None]]:
+        return await asyncio.gather(*[self.get_node_by_wiki(wiki_id) for wiki_id in node_ids])
+
 
     async def node_degree(self, node_id: str) -> int:
         # [numberchiffre]: node_id not part of graph returns `DegreeView({})` instead of 0

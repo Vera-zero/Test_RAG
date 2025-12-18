@@ -138,6 +138,12 @@ class BaseGraphStorage(StorageNameSpace):
     async def get_nodes_batch(self, node_ids: list[str]) -> dict[str, Union[dict, None]]:
         raise NotImplementedError
 
+    async def get_node_by_wiki(self, wiki_id: str) -> Union[dict, None]:
+        raise NotImplementedError
+
+    async def get_nodes_by_wiki_batch(self, wiki_ids: list[str]) -> dict[str, Union[dict, None]]:
+        raise NotImplementedError
+
     async def get_edge(
         self, source_node_id: str, target_node_id: str
     ) -> Union[dict, None]:

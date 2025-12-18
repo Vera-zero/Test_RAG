@@ -599,7 +599,7 @@ async def extract_events(
                     time_interval = event.get('time_interval', '').strip()
                     time_static = event.get('time_static', False)
                     
-                    event_id = compute_mdhash_id(f"{sentence}-{context}", prefix="event-")
+                    event_id = compute_mdhash_id(f"{sentence}-{time_point}-{time_interval}-{time_static}", prefix="event-")
 
 
                     event_obj = {
@@ -610,7 +610,7 @@ async def extract_events(
                         "time_interval":time_interval,
                         "time_static": time_static,
                         "source_id": chunk_key,
-                        "entities_involved": []  # Temporarily empty, will be filled later by NER
+                        "entities_involved": []  # Temporarily empty, will be filled later by wat
                     }
                     
                     if event_obj["sentence"]:  # Only add if sentence is not empty
@@ -651,7 +651,11 @@ async def extract_events(
                 continue
                 
             for k, v in result.items():
-                all_maybe_events[k].extend(v)
+                # 只有当这个k还没有数据时，才添加
+                if not all_maybe_events[k]:  # 检查列表是否为空
+                    all_maybe_events[k].extend(v)
+                else:
+                    logger.debug(f"Key {k} already exists, skip")
                 
         logger.info(f"Event extraction complete: {len(all_maybe_events)} unique events")
         
@@ -661,26 +665,17 @@ async def extract_events(
     
     phase_times["event_extraction"] = time.time() - event_extraction_start
     
-    ner_extraction_start = time.time()
+    wat_extraction_start = time.time()
     logger.info("=== WAT ENTITY EXTRACTION PHASE ===")
     try:
-        all_maybe_events, maybe_entities = await ner_extractor.extract_entities_from_events(all_maybe_events)
+        all_maybe_events, all_maybe_entities = await ner_extractor.extract_entities_from_events(all_maybe_events)
         logger.info("WAT entity extraction completed")
-        
-        # Build entity node data from entities extracted by NER
-        all_entities = set()
-        for event_id, event_list in all_maybe_events.items():
-            for event_obj in event_list:
-                entities = event_obj.get("entities_involved", [])
-                all_entities.update(entities)
-        
-        logger.info(f"wat extraction complete: {len(all_entities)} unique entities extracted")
-        
+
     except Exception as e:
         logger.error(f"Error during wat extraction: {e}")
         return None, {"failed": True, "phase": "ner_extraction"}
     
-    phase_times["ner_extraction"] = time.time() - ner_extraction_start
+    phase_times["wat_extraction"] = time.time() - wat_extraction_start
     
     event_merging_start = time.time()
     maybe_events = all_maybe_events
@@ -690,6 +685,15 @@ async def extract_events(
         all_events_data.append(event_data)
     
     phase_times["event_merging"] = time.time() - event_merging_start
+
+    entity_merging_start = time.time()
+    maybe_entities = all_maybe_entities
+    all_entity_data = []
+    for k, v in maybe_entities.items():
+        entity_data = await _merge_entities_then_upsert(v[0]["wiki_id"],k, v, dyg_inst, global_config)
+        all_entity_data.append(entity_data)
+    
+    phase_times["entity_merging"] = time.time() - entity_merging_start
     
     relationship_computation_start = time.time()
     if len(maybe_events) > 1:
@@ -715,13 +719,11 @@ async def extract_events(
         logger.warning("No events found, maybe your LLM is not working")
         return None, {}
         
-    events_vdb_update_start = time.time()
+    events_vdb_update_start = time.time()##TODO_VDB_STORAGE
     if events_vdb is not None and len(all_events_data) > 0:
         events_for_vdb = {}
         for dp in all_events_data:
             event_content_for_vdb = dp["sentence"]
-            if dp["timestamp"] != "static":
-                event_content_for_vdb += f" (Time: {dp['timestamp']})"
             
             events_for_vdb[dp["event_id"]] = {
                 "content": event_content_for_vdb,
@@ -760,7 +762,7 @@ async def extract_events(
     logger.info(f"Failed chunks: {failed_chunks}")
     logger.info(f"Success rate: {success_rate:.2f}%")
     logger.info(f"Extracted events: {already_events} (before deduplication)")
-    logger.info(f"NER extracted entities: {len(all_entities)}")
+    logger.info(f"WAT extracted entities: {len(all_maybe_entities)}")
     logger.info(f"Final unique events: {len(maybe_events)}")
     
     total_extraction_time = time.time() - extraction_start_time
@@ -770,7 +772,7 @@ async def extract_events(
         "failed_chunks": failed_chunks, 
         "success_rate": success_rate,
         "raw_events": already_events,
-        "ner_extracted_entities": len(all_entities),
+        "wat_extracted_entities": len(all_maybe_entities),
         "unique_events": len(maybe_events),
         "extraction_mode": "event_first_ner",
         "phase_times": phase_times,
@@ -779,7 +781,7 @@ async def extract_events(
     
     logger.info("=== DyG Construction Phase Time Statistics ===")
     logger.info(f"Event Extraction (LLM): {phase_times['event_extraction']:.2f}s")
-    logger.info(f"NER Entity Extraction: {phase_times['ner_extraction']:.2f}s")
+    logger.info(f"WAT Entity Extraction: {phase_times['wat_extraction']:.2f}s")
     logger.info(f"Event Node Merging: {phase_times['event_merging']:.2f}s")
     logger.info(f"Relationship Computation: {phase_times['relationship_computation']:.2f}s")
     logger.info(f"Vector Database Update: {phase_times['events_vdb_update']:.2f}s")
@@ -809,7 +811,7 @@ async def extract_events(
     
     return dyg_inst, stats
 
-async def _merge_events_then_upsert(
+async def _merge_events_then_upsert(##TODO_merge_events
     event_id: str,
     events_data: list[dict],
     dyg_inst: BaseGraphStorage,
@@ -889,6 +891,123 @@ async def _merge_events_then_upsert(
     event_data["event_id"] = event_id
     return event_data
 
+async def _merge_entities_then_upsert(
+    wiki_id: str,
+    entity_name: str,
+    entities_data: list[dict],
+    dyg_inst: BaseGraphStorage,
+    global_config: dict,
+):
+    """
+    合并实体数据并将其更新到图存储中，支持基于wikiid的实体消歧。
+    
+    消歧规则：
+    1. 提取实体的wikiid部分
+    2. 收集所有具有相同wikiid的节点进行合并
+    3. 合并规则：
+       - event_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+       - sentence: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+       - source_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+       - entity_name: 使用最长的一个作为该属性，且将节点名称也更新为该属性的值
+       - wat：使用所有节点中第一个被找到的的wat值作为该值
+    
+    Args:
+        entity_name (str): 实体名称
+        entities_data (list[dict]): 新的实体数据列表
+        dyg_inst (BaseGraphStorage): 图存储实例
+        global_config (dict): 全局配置字典
+        
+    Returns:
+        dict: 合并后的实体数据
+    """
+    # 首先收集所有具有相同wikiid的实体
+    wiki_entities = {}
+    already_entity = None
+    # 获取已存在的实体数据
+    already_entity = await dyg_inst.get_node(entity_name)##TODO,change to use wiki id
+    if already_entity is not None:
+        wiki_entities[entity_name] = already_entity
+    
+    # 收集所有相关的实体数据
+    for entity_data in entities_data:
+        name = entity_data.get("entity_name", "")
+        if name and entity_data.get("wiki_id", "") == wiki_id:
+            wiki_entities[name] = entity_data
+        
+    # 执行实体消歧合并
+    # 收集所有实体的数据
+    all_event_ids = []
+    all_sentences = []
+    all_source_ids = []
+    all_entity_names = []
+    all_wats = []
+    
+    for name, data in wiki_entities.items():
+        # 收集event_id
+        event_id = data.get("event_id", "")
+        if event_id:
+            all_event_ids.append(event_id)
+            
+        # 收集sentence
+        sentence = data.get("sentence", "")
+        if sentence:
+            all_sentences.append(sentence)
+            
+        # 收集source_id
+        source_id = data.get("source_id", "")
+        if source_id:
+            all_source_ids.append(source_id)
+            
+        # 收集entity_name
+        all_entity_names.append(name)
+        
+        # 收集wat（只收集非空的）
+        wat = data.get("wat")
+        if wat:
+            all_wats.append(wat)
+    
+    # 应用合并规则
+    # event_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+    merged_event_id = GRAPH_FIELD_SEP.join(all_event_ids) if all_event_ids else ""
+    
+    # sentence: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+    merged_sentence = GRAPH_FIELD_SEP.join(all_sentences) if all_sentences else ""
+    
+    # source_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
+    merged_source_id = GRAPH_FIELD_SEP.join(all_source_ids) if all_source_ids else ""
+    
+    # entity_name: 使用最长的一个作为该属性，且将节点名称也更新为该属性的值
+    merged_entity_name = max(all_entity_names, key=len) if all_entity_names else entity_name
+    
+    # wat：使用所有节点中第一个被找到的的wat值作为该值
+    merged_wat = all_wats[0] if all_wats else None
+    
+    # 构建最终的实体数据字典
+    entity_data = dict(
+        event_id=merged_event_id,
+        sentence=merged_sentence,
+        source_id=merged_source_id,
+        entity_name=merged_entity_name,
+        wat=merged_wat,
+    )
+    
+    # 删除其他具有相同wikiid的实体节点
+    for name in wiki_entities.keys():
+        if name != merged_entity_name:
+            try:
+                await dyg_inst.delete_node(name)
+            except Exception as e:
+                logger.warning(f"Failed to delete node {name}: {e}")
+    
+    # 将合并后的实体数据更新到图存储中
+    await dyg_inst.upsert_node(
+        merged_entity_name,
+        node_data=entity_data,
+    )
+    
+    # 添加实体ID到返回数据中
+    entity_data["entity_name"] = merged_entity_name
+    return entity_data
 @monitor_performance
 async def _merge_event_relations_then_upsert(##TODO_MERGE
     event_id: str,
@@ -1076,7 +1195,7 @@ class BatchNERExtractor:
         """
         entities = []
         for annotations in wat_annotations:
-            sentence_entities = [ann.wiki_title for ann in annotations]
+            sentence_entities = [ann.spot for ann in annotations]
             entities.append(sentence_entities)
         return entities
 
@@ -1187,33 +1306,51 @@ class BatchNERExtractor:
             return events_data
         
         sentences = []
+        chunk_keys = []
         event_mapping = []  # (event_id, event_index)
         
         for event_id, event_list in events_data.items():
             for idx, event_obj in enumerate(event_list):
                 sentence = event_obj.get("sentence", "")
+                chunk_key = event_obj.get("source_id","")
                 if sentence:
                     sentences.append(sentence)
-                    event_mapping.append((event_id, idx))
+                    chunk_keys.append(chunk_key)
+                    event_mapping.append((event_id, idx, chunk_key))
         
         if not sentences:
             logger.warning("No valid sentences")
             return events_data
         
-        
         logger.info(f"Extracting entities from {len(sentences)} event sentences")
         wat_annotations = await self.extract_wat_batch(sentences)
         wat_entities = self.extract_entities_wat(wat_annotations)
-        
+        wat_entities_data = defaultdict(list)
+
         # Map entities back to their events
-        for (event_id, event_idx), entities in zip(event_mapping, wat_entities):
+        for (event_id, event_idx, chunk_key), entities,annotations in zip(event_mapping, wat_entities,wat_annotations):
             if event_id in events_data and event_idx < len(events_data[event_id]):
                 events_data[event_id][event_idx]["entities_involved"] = entities
+
+                for entity_name,entity_wat in zip(entities,annotations):
+                    final_name = f"{entity_name}_{entity_wat.wiki_id}"
+
+                    node_obj = {
+                        "event_id": event_id,
+                        "sentence": sentence,
+                        "source_id": chunk_key,
+                        "entity_name":final_name,
+                        "wiki_id": entity_wat.wiki_id,
+                        "wat":entity_wat
+                    }
+
+                    wat_entities_data[final_name].append(node_obj)
+                    logger.info(f"Entity {final_name} extraction over and linked to event {event_id} ")
         
         total_entities = sum(len(entities) for entities in wat_entities)
         logger.info(f"wat extraction completed: {total_entities} entities extracted")
         
-        return events_data, wat_entities
+        return events_data, wat_entities_data
 
     async def _wat_entity_linking(self, text: str):
         # Main method, text annotation with WAT entity linking system
@@ -1230,7 +1367,7 @@ class BatchNERExtractor:
         for attempt in range(retry_count):
             try:
                 response = requests.get(wat_url, params=payload)
-                return [WATAnnotation(**annotation) for annotation in response.json()['annotations']]
+                return [WATAnnotation(**annotation) for annotation in response.json()['annotations'] if annotation['rho'] > 0.5 ]
             except requests.exceptions.RequestException as e:
                 logger.error(f"Retry attempt {attempt + 1} failed: {e}")
                 if attempt == retry_count - 1:

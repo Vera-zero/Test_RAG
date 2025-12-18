@@ -237,6 +237,50 @@ class Neo4jStorage(BaseGraphStorage):
             logger.error(f"Error in batch node retrieval: {e}")
             raise e
 
+    async def get_node_by_wiki(self, wiki_id: str) -> Union[dict, None]:
+        result = await self.get_nodes_by_wiki_batch([wiki_id])
+        return result[0] if result else None
+
+    async def get_nodes_by_wiki_batch(self, wiki_ids: list[str]) -> list[Union[dict, None]]:
+        if not wiki_ids:
+            return []
+            
+        result_dict = {wiki_id: None for wiki_id in wiki_ids}
+
+        try:
+            async with self.async_driver.session() as session:
+                result = await session.run(
+                    f"""
+                    UNWIND $wiki_ids AS wiki_id
+                    MATCH (n:`{self.namespace}`)
+                    WHERE n.id = wiki_id
+                    RETURN wiki_id, properties(n) AS wiki_data
+                    """,
+                    wiki_ids=wiki_ids
+                )
+                
+                async for record in result:
+                    wiki_id = record["wiki_id"]
+                    raw_wiki_data = record["wiki_data"]
+                    
+                    if raw_wiki_data:
+                        raw_wiki_data["clusters"] = json.dumps(
+                            [
+                                {
+                                    "level": index,
+                                    "cluster": cluster_id,
+                                }
+                                for index, cluster_id in enumerate(
+                                    raw_wiki_data.get("communityIds", [])
+                                )
+                            ]
+                        )
+                        result_dict[wiki_id] = raw_wiki_data
+            return [result_dict[wiki_id] for wiki_id in wiki_ids]
+        except Exception as e:
+            logger.error(f"Error in batch node retrieval: {e}")
+            raise e
+
     async def get_edge(
         self, source_node_id: str, target_node_id: str
     ) -> Union[dict, None]:
