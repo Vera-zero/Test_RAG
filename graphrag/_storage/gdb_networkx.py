@@ -82,7 +82,10 @@ class NetworkXStorage(BaseGraphStorage):
             
             # Convert lists in node attributes to JSON strings
             for node, data in graph_copy.nodes(data=True):
+                from graphrag.WAT import WATAnnotation
                 for key, value in data.items():
+                    if isinstance(value, WATAnnotation):
+                        data[key] = json.dumps(value.as_dict)
                     if isinstance(value, list):
                         data[key] = json.dumps(value)
             

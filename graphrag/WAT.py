@@ -30,4 +30,13 @@ class WATAnnotation:
 
     @property
     def as_dict(self):
-        return asdict(self)
+        return {
+            'start': self.start,
+            'end': self.end,
+            'rho': self.rho,
+            'explanation': self.explanation,
+            'spot': self.spot,
+            'wiki_id': self.wiki_id,
+            'wiki_title': self.wiki_title,
+            'prior_prob': self.prior_prob
+        }

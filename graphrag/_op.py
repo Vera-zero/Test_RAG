@@ -693,26 +693,45 @@ async def extract_events(
         entity_data = await _merge_entities_then_upsert(v[0]["wiki_id"],k, v, dyg_inst, global_config)
         all_entity_data.append(entity_data)
     
+    for entity_data in all_entity_data:
+        if "wat" in entity_data and hasattr(entity_data["wat"], "as_dict"):
+            entity_data["wat"] = entity_data["wat"].as_dict
+            
     phase_times["entity_merging"] = time.time() - entity_merging_start
     
+    
+    
+
     relationship_computation_start = time.time()
-    if len(maybe_events) > 1:
-        # logger.info(f"Starting multiprocess event relationship processing for {len(maybe_events)} events")
+    # if len(maybe_events) > 1:
+    #     # logger.info(f"Starting multiprocess event relationship processing for {len(maybe_events)} events")
         
-        try:
-            await batch_process_event_relationships_multiprocess(
-                dyg_inst,
-                global_config,
-                batch_size=config.event_relationship_batch_size,
-                max_workers=config.event_relationship_max_workers
+    #     try:
+    #         await batch_process_event_relationships_multiprocess(
+    #             dyg_inst,
+    #             global_config,
+    #             batch_size=config.event_relationship_batch_size,
+    #             max_workers=config.event_relationship_max_workers
+    #         )
+    #         # logger.info("Multiprocess event relationship processing completed successfully")
+    #     except Exception as e:
+    #         logger.error(f"Error in multiprocess event relationship processing: {e}")
+    #         logger.warning("Falling back to single-threaded processing if needed")
+    # else:
+    #     logger.info("Not enough events for multiprocess relationship processing")
+    
+    try:
+        await batch_entity_event_relationships_multiprocess(
+            dyg_inst,
+            global_config,
+            batch_size=config.event_relationship_batch_size,
+            max_workers=config.event_relationship_max_workers
             )
             # logger.info("Multiprocess event relationship processing completed successfully")
-        except Exception as e:
-            logger.error(f"Error in multiprocess event relationship processing: {e}")
-            logger.warning("Falling back to single-threaded processing if needed")
-    else:
-        logger.info("Not enough events for multiprocess relationship processing")
-    
+    except Exception as e:
+        logger.error(f"Error in entities_event relationship processing: {e}")
+        logger.warning("Falling back to single-threaded processing if needed")
+
     phase_times["relationship_computation"] = time.time() - relationship_computation_start
     
     if not len(all_events_data):
@@ -920,7 +939,7 @@ async def _merge_entities_then_upsert(
     Returns:
         dict: 合并后的实体数据
     """
-    # 首先收集所有具有相同wikiid的实体
+    # 首先收集所有具有相同wikiid的实体(未完成)
     wiki_entities = {}
     already_entity = None
     # 获取已存在的实体数据
@@ -1116,6 +1135,87 @@ async def batch_process_event_relationships_multiprocess(
     
     logger.info(f"Successfully processed all {total_updates} event relationships")
 
+@monitor_performance
+async def batch_entity_event_relationships_multiprocess(
+    dyg_inst: BaseGraphStorage,
+    global_config: dict,
+    batch_size: int = 100,
+    max_workers: int = None
+):
+    """
+    使用多进程方式批量处理事件关系，建立事件节点之间的关系边，并添加事件节点与实体节点之间的关联边
+    
+    Args:
+        dyg_inst (BaseGraphStorage): 图存储实例，用于访问和更新图数据
+        global_config (dict): 全局配置参数
+        batch_size (int): 每个批次处理的事件数量，默认为100
+        max_workers (int): 最大工作进程数，默认为None（自动根据CPU核心数确定）
+    """
+    # 获取所有节点数据
+    all_events = await dyg_inst.get_all_nodes()
+    
+    # 筛选出有效的事件节点（具有时间戳且包含涉及实体）
+    valid_events = {}
+    for event_id, event_data in all_events.items():
+        entities = event_data.get("entities_involved", [])
+        if entities:
+            valid_events[event_id] = event_data
+    
+    # 如果没有有效事件，直接返回
+    if not valid_events:
+        logger.info("No valid events found for relationship processing")
+        return
+    
+    logger.info(f"Processing {len(valid_events)} valid events for relationships")
+
+    entity_edge_updates = []
+    for event_id, event_data in valid_events.items():
+        # 获取事件涉及的实体列表和源ID
+        entities = event_data.get("entities_involved", [])
+        source_id = event_data.get("source_id", "")
+        
+        # 为每个实体创建与事件的关联边
+        for entity_name in entities:
+            # 创建事件节点与实体节点之间的边数据
+            entity_edge_data = {
+                "weight": 1.0,  # 边的权重
+                "description": f"Event {event_id} involves entity {entity_name}",  # 边的描述
+                "source_id": source_id,  # 边的块来源ID
+                "event_id": event_id,  # 边的目标ID"
+                "entity_name": entity_name,  # 实体名称
+
+                "is_undirected": False  # 是否为无向边
+            }
+            # 将边更新数据添加到列表中
+            entity_edge_updates.append((event_id, entity_name, entity_edge_data))
+    
+    # 合并事件间关系边和事件实体关联边
+    all_edge_updates = entity_edge_updates
+    
+    # 批量更新图数据库中的边信息
+    write_batch_size = 1000
+    total_updates = len(all_edge_updates)
+    
+    # 分批执行边更新操作
+    for i in range(0, total_updates, write_batch_size):
+        # 获取当前批次的更新数据
+        batch_updates = all_edge_updates[i:i+write_batch_size]
+        
+        # 创建更新任务列表
+        update_tasks = [
+            dyg_inst.upsert_edge(src_id, tgt_id, edge_data=edge_data)
+            for src_id, tgt_id, edge_data in batch_updates
+        ]
+        
+        # 并发执行更新任务
+        await asyncio.gather(*update_tasks, return_exceptions=True)
+        
+        # 记录进度信息
+        progress = min(i + write_batch_size, total_updates)
+        logger.info(f"Updated {progress}/{total_updates} edges ({progress*100//total_updates}%)")
+    
+    logger.info(f"Successfully processed all {total_updates} event relationships")
+
 
 class BatchNERExtractor:
     """Batch NER entity extractor, using BERT model for efficient entity recognition"""
@@ -1195,7 +1295,7 @@ class BatchNERExtractor:
         """
         entities = []
         for annotations in wat_annotations:
-            sentence_entities = [ann.spot for ann in annotations]
+            sentence_entities = [f"{ann.spot}_{ann.wiki_id}" for ann in annotations]
             entities.append(sentence_entities)
         return entities
 
@@ -1333,19 +1433,18 @@ class BatchNERExtractor:
                 events_data[event_id][event_idx]["entities_involved"] = entities
 
                 for entity_name,entity_wat in zip(entities,annotations):
-                    final_name = f"{entity_name}_{entity_wat.wiki_id}"
-
+                    
                     node_obj = {
                         "event_id": event_id,
                         "sentence": sentence,
                         "source_id": chunk_key,
-                        "entity_name":final_name,
+                        "entity_name":entity_name,
                         "wiki_id": entity_wat.wiki_id,
                         "wat":entity_wat
                     }
 
-                    wat_entities_data[final_name].append(node_obj)
-                    logger.info(f"Entity {final_name} extraction over and linked to event {event_id} ")
+                    wat_entities_data[entity_name].append(node_obj)
+                    logger.info(f"Entity {entity_name} extraction over and linked to event {event_id} ")
         
         total_entities = sum(len(entities) for entities in wat_entities)
         logger.info(f"wat extraction completed: {total_entities} entities extracted")
