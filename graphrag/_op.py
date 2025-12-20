@@ -487,6 +487,23 @@ async def extract_events(
     already_events = 0
     failed_chunks = 0
 
+    def clean_to_json(current_event_result: str) -> str:
+        """
+        Clean the LLM response to ensure it's valid JSON format.
+        
+        Args:
+            current_event_result (str): Raw response from LLM
+            
+        Returns:
+            str: Cleaned JSON string
+        """
+        if not current_event_result:
+            return ""
+           
+        start_idx = current_event_result.find('{')
+        end_idx = current_event_result.rfind('}') + 1
+        return current_event_result[start_idx:end_idx]
+
     async def _process_events_only(chunk_key_dp: tuple[str, TextChunkSchema]):
         nonlocal already_processed, already_events
         
@@ -497,6 +514,7 @@ async def extract_events(
             content = f"Title: {doc_title}\n\n{chunk_dp['content']}" if doc_title else chunk_dp["content"]
             
             maybe_events = defaultdict(list)
+            maybe_entities = defaultdict(list)
             
             event_hint_prompt = event_extract_prompt.replace("{input_text}", content)
             
@@ -509,15 +527,21 @@ async def extract_events(
                 logger.error(f"Raw response: '{current_event_result}'")
                 return {}
             
+            current_event_result = clean_to_json(current_event_result)
+
             event_history = pack_user_ass_to_openai_messages(event_hint_prompt, current_event_result, using_amazon_bedrock)
             combined_event_data = {"events": []} 
+            combined_entity_data = {"entities": []}
 
             try:
                 parsed_data = json.loads(current_event_result)
                 # logger.info(f"Successfully parsed JSON for chunk {chunk_key}")
                 if isinstance(parsed_data, dict) and "events" in parsed_data:
                     combined_event_data["events"].extend(parsed_data["events"])
-                    # logger.info(f"Found {len(parsed_data['events'])} events in initial response")
+                    if "entities" in parsed_data:
+                        combined_entity_data["entities"].extend(parsed_data["entities"])
+                    else:
+                        logger.warning(f"Parsed JSON does not contain 'entities' key for chunk {chunk_key}")
                 else:
                     logger.warning(f"Parsed JSON does not contain 'events' key for chunk {chunk_key}")
                     logger.warning(f"Parsed data keys: {list(parsed_data.keys()) if isinstance(parsed_data, dict) else 'not a dict'}")
@@ -526,26 +550,6 @@ async def extract_events(
                 logger.error(f"Failed to parse: '{current_event_result}'")
                 logger.error(f"Error details: line {e.lineno}, column {e.colno}, pos {e.pos}")
                 
-                try:
-                    start_idx = current_event_result.find('{')
-                    end_idx = current_event_result.rfind('}') + 1
-                    # logger.info(f"Attempting JSON recovery: start_idx={start_idx}, end_idx={end_idx}")
-                    
-                    if start_idx >= 0 and end_idx > start_idx:
-                        json_str = current_event_result[start_idx:end_idx]
-                        # logger.info(f"Extracted JSON substring: '{json_str[:200]}...'")
-                        parsed_data = json.loads(json_str)
-                        if isinstance(parsed_data, dict) and "events" in parsed_data:
-                            combined_event_data["events"].extend(parsed_data["events"])
-                            # logger.info(f"Recovery successful: found {len(parsed_data['events'])} events")
-                        else:
-                            logger.warning(f"Recovery failed: no 'events' key in recovered JSON")
-                    else:
-                        logger.error(f"Could not find JSON brackets in response: start_idx={start_idx}, end_idx={end_idx}")
-                except Exception as inner_e:
-                    logger.error(f"Failed to recover JSON for chunk {chunk_key}: {inner_e}")
-                    logger.error(f"Recovery attempt failed on: '{json_str[:200] if 'json_str' in locals() else 'N/A'}...'")
-
             # Gleaning process
             for now_glean_index in range(config.event_extract_max_gleaning):
                 # logger.info(f"Starting gleaning iteration {now_glean_index + 1}/{config.event_extract_max_gleaning} for chunk {chunk_key}")
@@ -559,7 +563,16 @@ async def extract_events(
                 try:
                     gleaned_data = json.loads(glean_event_result)
                     if isinstance(gleaned_data, dict) and "events" in gleaned_data:
-                        combined_event_data["events"].extend(gleaned_data["events"])
+                        ##only append new events and entities
+                        for event in gleaned_data["events"]:
+                            if not any(e.get("event_id") == event.get("event_id") for e in combined_event_data["events"]):
+                                combined_event_data["events"].append(event)
+                        if "entities" in gleaned_data:
+                            for entity in gleaned_data["entities"]:
+                                if not any(e.get("id") == entity.get("id") for e in combined_entity_data["entities"]):
+                                    combined_entity_data["entities"].append(entity)
+                        else:
+                            logger.warning(f"Gleaned JSON does not contain 'entities' key for chunk {chunk_key}")
                         # logger.info(f"Gleaning iteration {now_glean_index + 1}: found {len(gleaned_data['events'])} additional events")
                     else:
                         logger.warning(f"Gleaning iteration {now_glean_index + 1}: no 'events' key in response")
@@ -580,6 +593,7 @@ async def extract_events(
             # Process event data
             logger.info(f"Processing {len(combined_event_data.get('events', []))} total events for chunk {chunk_key}")
             
+
             for event in combined_event_data.get("events", []):
                 try:
                     if not isinstance(event, dict):
@@ -591,32 +605,49 @@ async def extract_events(
                         logger.warning(f"Skipping event with invalid sentence in chunk {chunk_key}: '{sentence}'")
                         continue
 
+                    event_id = event.get('event_id', '')
+                    if not event_id or not isinstance(event_id, str):
+                        logger.warning(f"Skipping event with invalid event_id in chunk {chunk_key}: '{event_id}'")
+                        continue
+
                     context = event.get('context', '')
                     if context and not isinstance(context, str):
                         context = ''
                     
-                    time_point = event.get('time_point', '').strip()
-                    time_interval = event.get('time_interval', '').strip()
+                    start_time = event.get('start_time', '').strip()
+                    end_time = event.get('end_time', '').strip()
                     time_static = event.get('time_static', False)
+
+                    final_event_id = compute_mdhash_id(f"{sentence}-{start_time}-{end_time}-{time_static}", prefix="event-")
                     
-                    event_id = compute_mdhash_id(f"{sentence}-{time_point}-{time_interval}-{time_static}", prefix="event-")
-
-
                     event_obj = {
-                        "event_id": event_id,
+                        "event_id": final_event_id,
                         "sentence": sentence,
                         "context": context,
-                        "time_point":time_point,
-                        "time_interval":time_interval,
+                        "start_time":start_time,
+                        "end_time":end_time,
                         "time_static": time_static,
                         "source_id": chunk_key,
-                        "entities_involved": []  # Temporarily empty, will be filled later by wat
+                        "entities":[],#extract by models
+                        "wat":[],#extract by wat
+                        "entities_involved": []  # Temporarily empty, will be filled later 
                     }
+                    ##将从llm中提取出的实体加入事件列表中
+                    for entity in combined_entity_data.get("entities", []):
+                        entity_event_ids = entity.get("event_id", "")
+                        event_ids_list = entity_event_ids.split("<SEP>") if entity_event_ids else []
+                        if event_id in event_ids_list:
+                            this_entity_obj = {
+                                "entity_name": entity["id"],
+                                "type": entity["type"],
+                                "description": entity["description"],
+                            }
+                            event_obj["entities"].append(this_entity_obj)
                     
                     if event_obj["sentence"]:  # Only add if sentence is not empty
-                        maybe_events[event_id].append(event_obj)
+                        maybe_events[final_event_id].append(event_obj)
                         already_events += 1
-                        logger.debug(f"Added event {event_id} for chunk {chunk_key}: {sentence[:100]}...")
+                        logger.debug(f"Added event {final_event_id} for chunk {chunk_key}.")
                         
                 except Exception as event_err:
                     logger.error(f"Error processing individual event in chunk {chunk_key}: {event_err}")
@@ -629,7 +660,6 @@ async def extract_events(
             now_ticks = PROMPTS["process_tickers"][already_processed % len(PROMPTS["process_tickers"])]
             print(f"{now_ticks} Event extraction: {already_processed}({already_processed*100//len(ordered_chunks)}%) chunks, "
                   f"{already_events} events\r", end="", flush=True)
-            
             return dict(maybe_events)
             
         except Exception as e:
@@ -643,7 +673,7 @@ async def extract_events(
         event_results = await asyncio.gather(*tasks, return_exceptions=True)
         logger.info(f"\nEvent extraction completed, processing {len(event_results)} results")
         
-        # Merge all event results
+        # Merge all events and entities results#TODO 是否冗余？
         all_maybe_events = defaultdict(list)
         for result in event_results:
             if isinstance(result, Exception):
@@ -658,7 +688,6 @@ async def extract_events(
                     logger.debug(f"Key {k} already exists, skip")
                 
         logger.info(f"Event extraction complete: {len(all_maybe_events)} unique events")
-        
     except Exception as e:
         logger.error(f"Error during event extraction phase: {e}")
         return None, {"failed": True, "phase": "event_extraction"}
@@ -667,7 +696,7 @@ async def extract_events(
     
     wat_extraction_start = time.time()
     logger.info("=== WAT ENTITY EXTRACTION PHASE ===")
-    try:
+    try:####TODO 对事件节点中包含的实体进行实体链接，然后从所有事件中提取实体节点，然后对实体节点消歧。
         all_maybe_events, all_maybe_entities = await ner_extractor.extract_entities_from_events(all_maybe_events)
         logger.info("WAT entity extraction completed")
 
