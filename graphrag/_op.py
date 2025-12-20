@@ -695,9 +695,10 @@ async def extract_events(
     phase_times["event_extraction"] = time.time() - event_extraction_start
     
     wat_extraction_start = time.time()
-    logger.info("=== WAT ENTITY EXTRACTION PHASE ===")
-    try:####TODO 对事件节点中包含的实体进行实体链接，然后从所有事件中提取实体节点，然后对实体节点消歧。
-        all_maybe_events, all_maybe_entities = await ner_extractor.extract_entities_from_events(all_maybe_events)
+    logger.info("=== WAT ENTITY LINKING PHASE ===")
+    try:
+        all_maybe_events = await ner_extractor.extract_entities_from_events(all_maybe_events)
+        ####TODO 从所有事件中提取实体节点，然后对实体节点消歧。
         logger.info("WAT entity extraction completed")
 
     except Exception as e:
@@ -1350,9 +1351,9 @@ class BatchNERExtractor:
             for idx, (sentence_idx, sentence) in enumerate(zip(sentence_indices, valid_sentences)):
                 logger.debug(f"Processing sentence {idx} for WAT entity linking")
                 annotations = await self._wat_entity_linking(sentence)
-                all_annotations[sentence_idx] = annotations
+                all_annotations[sentence_idx] = annotations[0]
             
-            total_annotations = sum(len(annotations) for annotations in all_annotations)
+            total_annotations = (len(all_annotations) )
             logger.info(f"WAT entity linking completed: {total_annotations} annotations from {len(valid_sentences)} sentences")
             
             return all_annotations
@@ -1437,12 +1438,14 @@ class BatchNERExtractor:
         sentences = []
         chunk_keys = []
         event_mapping = []  # (event_id, event_index)
-        
+        entities_list = []
         for event_id, event_list in events_data.items():
             for idx, event_obj in enumerate(event_list):
                 sentence = event_obj.get("sentence", "")
                 chunk_key = event_obj.get("source_id","")
+                entities = event_obj.get("entities", [])
                 if sentence:
+                    entities_list.append(entities)
                     sentences.append(sentence)
                     chunk_keys.append(chunk_key)
                     event_mapping.append((event_id, idx, chunk_key))
@@ -1451,34 +1454,31 @@ class BatchNERExtractor:
             logger.warning("No valid sentences")
             return events_data
         
-        logger.info(f"Extracting entities from {len(sentences)} event sentences")
-        wat_annotations = await self.extract_wat_batch(sentences)
-        wat_entities = self.extract_entities_wat(wat_annotations)
-        wat_entities_data = defaultdict(list)
+        # logger.info(f"Extracting entities from {len(sentences)} event sentences")
+        # wat_annotations = await self.extract_wat_batch(sentences)
+        # wat_entities = self.extract_entities_wat(wat_annotations)
+        # wat_entities_data = defaultdict(list)
 
         # Map entities back to their events
-        for (event_id, event_idx, chunk_key), entities,annotations in zip(event_mapping, wat_entities,wat_annotations):
-            if event_id in events_data and event_idx < len(events_data[event_id]):
-                events_data[event_id][event_idx]["entities_involved"] = entities
-
-                for entity_name,entity_wat in zip(entities,annotations):
-                    
-                    node_obj = {
-                        "event_id": event_id,
-                        "sentence": sentence,
-                        "source_id": chunk_key,
-                        "entity_name":entity_name,
-                        "wiki_id": entity_wat.wiki_id,
-                        "wat":entity_wat
-                    }
-
-                    wat_entities_data[entity_name].append(node_obj)
-                    logger.info(f"Entity {entity_name} extraction over and linked to event {event_id} ")
+        for (event_id, event_idx, chunk_key), entities in zip(event_mapping, entities_list):
+            entity_input = []
+            for entity in entities:
+                input = f"{entity.get('entity_name', '')} is a {entity.get('type', '')},{entity.get('description', '')}"
+                entity_input.append(input)
+            wat_all = await self.extract_wat_batch(entity_input)
+            events_data[event_id][event_idx]["wat"] = wat_all
+            entity_envolved = []
+            for idx, wat in enumerate(wat_all):
+                wat_name = f"{wat.spot}_{wat.wiki_id}"
+                entity_envolved.append(wat_name)
+                original_name = events_data[event_id][event_idx]["entities"][idx]
+                events_data[event_id][event_idx]["entities"][idx] = f"{original_name}_{wat.wiki_id}"
+            events_data[event_id][event_idx]["entities_involved"] = entity_envolved
         
-        total_entities = sum(len(entities) for entities in wat_entities)
+        total_entities = sum(len(entities) for entities in entities_list)
         logger.info(f"wat extraction completed: {total_entities} entities extracted")
         
-        return events_data, wat_entities_data
+        return events_data
 
     async def _wat_entity_linking(self, text: str):
         # Main method, text annotation with WAT entity linking system
@@ -1495,7 +1495,7 @@ class BatchNERExtractor:
         for attempt in range(retry_count):
             try:
                 response = requests.get(wat_url, params=payload)
-                return [WATAnnotation(**annotation) for annotation in response.json()['annotations'] if annotation['rho'] > 0.5 ]
+                return [WATAnnotation(**annotation) for annotation in response.json()['annotations'] if annotation['rho']]
             except requests.exceptions.RequestException as e:
                 logger.error(f"Retry attempt {attempt + 1} failed: {e}")
                 if attempt == retry_count - 1:
