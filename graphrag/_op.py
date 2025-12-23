@@ -7,13 +7,13 @@ import time
 import requests
 from dateutil import parser as date_parser
 from .WAT import WATAnnotation
-
+import os
 import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 
-from typing import Union, Optional, List, Dict
+from typing import OrderedDict, Union, Optional, List, Dict
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing as mp
@@ -433,6 +433,7 @@ async def extract_events(
     events_vdb: BaseVectorStorage,
     global_config: dict,
     using_amazon_bedrock: bool=False,
+    working_dir: Path = Path("."),
 ) -> Union[tuple[BaseGraphStorage, dict], tuple[None, dict]]:
 
     extraction_start_time = time.time()
@@ -452,8 +453,9 @@ async def extract_events(
     
     phase_times = {
         "event_extraction": 0,
-        "ner_extraction": 0,
+        "wat_extraction": 0,
         "event_merging": 0,
+        "entity_extract": 0,
         "relationship_computation": 0,
         "events_vdb_update": 0,
     }
@@ -482,6 +484,10 @@ async def extract_events(
     event_extract_prompt = PROMPTS["dynamic_event_units"]
     event_extract_continue_prompt = PROMPTS["event_continue_extraction"]
     event_extract_if_loop_prompt = PROMPTS["event_if_loop_extraction"]
+    extract_2_step_events = PROMPTS["extract_2_step_events"]
+    extract_2_step_entities = PROMPTS["extract_2_step_entities"]
+    entityonly_continue_extraction = PROMPTS["entityonly_continue_extraction"]
+    eventonly_continue_extraction = PROMPTS["eventonly_continue_extraction"]
 
     already_processed = 0
     already_events = 0
@@ -504,7 +510,7 @@ async def extract_events(
         end_idx = current_event_result.rfind('}') + 1
         return current_event_result[start_idx:end_idx]
 
-    async def _process_events_only(chunk_key_dp: tuple[str, TextChunkSchema]):
+    async def _process_all(chunk_key_dp: tuple[str, TextChunkSchema]):
         nonlocal already_processed, already_events
         
         try:
@@ -514,8 +520,7 @@ async def extract_events(
             content = f"Title: {doc_title}\n\n{chunk_dp['content']}" if doc_title else chunk_dp["content"]
             
             maybe_events = defaultdict(list)
-            maybe_entities = defaultdict(list)
-            
+
             event_hint_prompt = event_extract_prompt.replace("{input_text}", content)
             
             current_event_result = await use_llm_func(event_hint_prompt)
@@ -561,16 +566,26 @@ async def extract_events(
                 event_history += pack_user_ass_to_openai_messages(event_extract_continue_prompt, glean_event_result, using_amazon_bedrock)
                 
                 try:
+                    glean_event_result = clean_to_json(glean_event_result)
                     gleaned_data = json.loads(glean_event_result)
                     if isinstance(gleaned_data, dict) and "events" in gleaned_data:
                         ##only append new events and entities
                         for event in gleaned_data["events"]:
                             if not any(e.get("event_id") == event.get("event_id") for e in combined_event_data["events"]):
                                 combined_event_data["events"].append(event)
-                        if "entities" in gleaned_data:
-                            for entity in gleaned_data["entities"]:
-                                if not any(e.get("id") == entity.get("id") for e in combined_entity_data["entities"]):
-                                    combined_entity_data["entities"].append(entity)
+                        if "entities" in gleaned_data:###################
+                            for new_entity in gleaned_data["entities"]:
+                                entity_id = new_entity.get("id")
+                                # 查找已存在实体的索引
+                                existing_indices = [i for i, e in enumerate(combined_entity_data["entities"]) 
+                                                    if e.get("id") == entity_id]
+                                
+                                if existing_indices:
+                                    # 更新第一个匹配的实体（假设id是唯一的）
+                                    combined_entity_data["entities"][existing_indices[0]].update(new_entity)
+                                else:
+                                    # 添加新实体
+                                    combined_entity_data["entities"].append(new_entity)
                         else:
                             logger.warning(f"Gleaned JSON does not contain 'entities' key for chunk {chunk_key}")
                         # logger.info(f"Gleaning iteration {now_glean_index + 1}: found {len(gleaned_data['events'])} additional events")
@@ -591,7 +606,7 @@ async def extract_events(
                     break
             
             # Process event data
-            logger.info(f"Processing {len(combined_event_data.get('events', []))} total events for chunk {chunk_key}")
+            logger.info(f"Processing {len(combined_event_data.get('events', []))}  events for chunk {chunk_key} before merge")
             
 
             for event in combined_event_data.get("events", []):
@@ -645,10 +660,10 @@ async def extract_events(
                             event_obj["entities"].append(this_entity_obj)
                     
                     if event_obj["sentence"]:  # Only add if sentence is not empty
-                        maybe_events[final_event_id].append(event_obj)
-                        already_events += 1
-                        logger.debug(f"Added event {final_event_id} for chunk {chunk_key}.")
-                        
+                        if final_event_id not in maybe_events:
+                            maybe_events[final_event_id] = [event_obj]
+                            already_events += 1
+                            logger.debug(f"Added event {final_event_id} for chunk {chunk_key}.")
                 except Exception as event_err:
                     logger.error(f"Error processing individual event in chunk {chunk_key}: {event_err}")
                     logger.error(f"Problematic event data: {event}")
@@ -667,9 +682,272 @@ async def extract_events(
             logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
             return {}
 
+    
+    async def _process_2_step_events(chunk_key_dp: tuple[str, TextChunkSchema]):
+        nonlocal already_processed, already_events
+        ## event extraction
+        try:
+            chunk_key = chunk_key_dp[0]
+            chunk_dp = chunk_key_dp[1]
+            doc_title = chunk_dp.get("doc_title", "")
+            content = f"Title: {doc_title}\n\n{chunk_dp['content']}" if doc_title else chunk_dp["content"]
+            
+            maybe_events = defaultdict(list)
+            events_2_llm = defaultdict(list)
+            event_hint_prompt = extract_2_step_events.replace("{input_text}", content)
+            
+            current_event_result = await use_llm_func(event_hint_prompt)
+            if isinstance(current_event_result, list):
+                current_event_result = current_event_result[0]["text"]
+             
+            if not current_event_result or not str(current_event_result).strip():
+                logger.error(f"Empty response from LLM for chunk {chunk_key}")
+                logger.error(f"Raw response: '{current_event_result}'")
+                return {}
+            
+            current_event_result = clean_to_json(current_event_result)
+
+            event_history = pack_user_ass_to_openai_messages(event_hint_prompt, current_event_result, using_amazon_bedrock)
+            combined_event_data = {"events": []} 
+
+            try:
+                parsed_data = json.loads(current_event_result)
+                # logger.info(f"Successfully parsed JSON for chunk {chunk_key}")
+                if isinstance(parsed_data, dict) and "events" in parsed_data:
+                    combined_event_data["events"].extend(parsed_data["events"])
+                else:
+                    logger.warning(f"Parsed JSON does not contain 'events' key for chunk {chunk_key}")
+                    logger.warning(f"Parsed data keys: {list(parsed_data.keys()) if isinstance(parsed_data, dict) else 'not a dict'}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Initial event JSON parsing error for chunk {chunk_key}: {e}")
+                logger.error(f"Failed to parse: '{current_event_result}'")
+                logger.error(f"Error details: line {e.lineno}, column {e.colno}, pos {e.pos}")
+                
+            # Gleaning process
+            for now_glean_index in range(config.event_extract_max_gleaning):
+                # logger.info(f"Starting gleaning iteration {now_glean_index + 1}/{config.event_extract_max_gleaning} for chunk {chunk_key}")
+                
+                glean_event_result = await use_llm_func(eventonly_continue_extraction, history_messages=event_history)
+                if isinstance(glean_event_result, list):
+                    glean_event_result = glean_event_result[0]["text"]
+                
+                event_history += pack_user_ass_to_openai_messages(eventonly_continue_extraction, glean_event_result, using_amazon_bedrock)
+                
+                try:
+                    glean_event_result = clean_to_json(glean_event_result)
+                    gleaned_data = json.loads(glean_event_result)
+                    if isinstance(gleaned_data, dict) and "events" in gleaned_data:
+                        ##only append new events and entities
+                        for event in gleaned_data["events"]:
+                            if not any(e.get("event_id") == event.get("event_id") for e in combined_event_data["events"]):
+                                combined_event_data["events"].append(event)
+                    else:
+                        logger.warning(f"Gleaning iteration {now_glean_index + 1}: no 'events' key in response")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Gleaning event JSON parsing error for chunk {chunk_key}, iteration {now_glean_index + 1}: {e}")
+                    logger.error(f"Failed to parse gleaning response: '{glean_event_result}'")
+
+                if now_glean_index == config.event_extract_max_gleaning - 1:
+                    break
+
+                if_loop_event_result = await use_llm_func(event_extract_if_loop_prompt, history_messages=event_history)
+                if_loop_event_result = if_loop_event_result.strip().strip('"').strip("'").lower()
+                # logger.info(f"Continue gleaning decision for chunk {chunk_key}: '{if_loop_event_result}'")
+                if if_loop_event_result != "yes":
+                    # logger.info(f"Stopping gleaning for chunk {chunk_key} after {now_glean_index + 1} iterations")
+                    break
+            
+            # Process event data
+            logger.info(f"Processing {len(combined_event_data.get('events', []))}  events for chunk {chunk_key} before merge")
+            
+
+            for event in combined_event_data.get("events", []):
+                try:
+                    if not isinstance(event, dict):
+                        logger.warning(f"Skipping non-dict event in chunk {chunk_key}: {type(event)}")
+                        continue
+                        
+                    sentence = event.get('sentence', '')#TODO:SCextraction
+                    if not sentence or not isinstance(sentence, str):
+                        logger.warning(f"Skipping event with invalid sentence in chunk {chunk_key}: '{sentence}'")
+                        continue
+
+                    event_id = event.get('event_id', '')
+                    if not event_id or not isinstance(event_id, str):
+                        logger.warning(f"Skipping event with invalid event_id in chunk {chunk_key}: '{event_id}'")
+                        continue
+
+                    context = event.get('context', '')
+                    if context and not isinstance(context, str):
+                        context = ''
+                    
+                    start_time = event.get('start_time', '').strip()
+                    end_time = event.get('end_time', '').strip()
+                    time_static = event.get('time_static', False)
+
+                    event_obj = {
+                        "event_id": event_id,
+                        "sentence": sentence,
+                        "context": context,
+                        "start_time":start_time,
+                        "end_time":end_time,
+                        "time_static": time_static,
+                        "source_id": chunk_key,
+                        "entities":[],#extract by models
+                        "wat":[],#extract by wat
+                        "entities_involved": []  # Temporarily empty, will be filled later 
+                    }
+                    event_llm_obj = {
+                        "event_id": event_id,
+                        "sentence": sentence,
+                        "context": context,
+                        "start_time":start_time,
+                        "end_time":end_time,
+                        "time_static": time_static
+                    }
+                    if event_obj["sentence"]:  # Only add if sentence is not empty
+                        if event_id not in maybe_events:
+                            maybe_events[event_id] = [event_obj]
+                            already_events += 1
+                            logger.debug(f"Added event {event_id} for chunk {chunk_key}.")
+                        if event_id not in events_2_llm:
+                            events_2_llm[event_id] = [event_llm_obj]
+                except Exception as event_err:
+                    logger.error(f"Error processing individual event in chunk {chunk_key}: {event_err}")
+                    logger.error(f"Problematic event data: {event}")
+            
+            logger.info(f"Successfully processed {len(maybe_events)} unique events for chunk {chunk_key}")
+            
+            already_processed += 1
+            
+            now_ticks = PROMPTS["process_tickers"][already_processed % len(PROMPTS["process_tickers"])]
+            print(f"{now_ticks} Event extraction: {already_processed}({already_processed*100//len(ordered_chunks)}%) chunks, "
+                  f"{already_events} events\r", end="", flush=True)
+            return dict(maybe_events),dict(events_2_llm)
+            
+        except Exception as e:
+            already_processed += 1
+            logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
+            return {},{}
+
+    async def _process_2_step_entities(event_dict,event_2_llm_dict):
+        try:
+            content = str(event_2_llm_dict)
+            
+            maybe_entities = defaultdict(list)
+            entity_hint_prompt = extract_2_step_entities.replace("{input_text}", content)
+            
+            current_entity_result = await use_llm_func(entity_hint_prompt)
+            if isinstance(current_entity_result, list):
+                current_entity_result = current_entity_result[0]["text"]
+             
+            if not current_entity_result or not str(current_entity_result).strip():
+                logger.error(f"Empty response from LLM for entity ")
+                logger.error(f"Raw response: '{current_entity_result}'")
+                return {}
+            
+            current_event_result = clean_to_json(current_event_result)
+
+            entity_history = pack_user_ass_to_openai_messages(entity_hint_prompt, current_entity_result, using_amazon_bedrock)
+            combined_entity_data = {"entities": []} 
+
+            try:
+                parsed_data = json.loads(current_event_result)
+                # logger.info(f"Successfully parsed JSON for chunk {chunk_key}")
+                if isinstance(parsed_data, dict) and "entities" in parsed_data:
+                    combined_entity_data["entities"].extend(parsed_data["entities"])
+                else:
+                    logger.warning(f"Parsed JSON does not contain 'entities' key for chunk {chunk_key}")
+                    logger.warning(f"Parsed data keys: {list(parsed_data.keys()) if isinstance(parsed_data, dict) else 'not a dict'}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Initial event JSON parsing error for event: {e}")
+                logger.error(f"Failed to parse: '{current_event_result}'")
+                logger.error(f"Error details: line {e.lineno}, column {e.colno}, pos {e.pos}")
+                
+            # Gleaning process
+            for now_glean_index in range(config.event_extract_max_gleaning):
+                # logger.info(f"Starting gleaning iteration {now_glean_index + 1}/{config.event_extract_max_gleaning} for chunk {chunk_key}")
+                
+                glean_entity_result = await use_llm_func(entityonly_continue_extraction, history_messages=entity_history)
+                glean_entity_result = clean_to_json(glean_entity_result)
+                if isinstance(glean_entity_result, list):
+                    glean_entity_result = glean_entity_result[0]["text"]
+                
+                entity_history += pack_user_ass_to_openai_messages(entityonly_continue_extraction, glean_entity_result, using_amazon_bedrock)
+                
+                try:
+                    gleaned_data = json.loads(glean_entity_result)
+                    if isinstance(gleaned_data, dict) and "entities" in gleaned_data:
+                        for new_entity in gleaned_data["entities"]:
+                            entity_id = new_entity.get("id")
+                            # 查找已存在实体的索引
+                            existing_indices = [i for i, e in enumerate(combined_entity_data["entities"]) 
+                                                if e.get("id") == entity_id]
+                            
+                            if existing_indices:
+                                # 更新第一个匹配的实体（假设id是唯一的）
+                                combined_entity_data["entities"][existing_indices[0]].update(new_entity)
+                            else:
+                                # 添加新实体
+                                combined_entity_data["entities"].append(new_entity)
+                    else:
+                        logger.warning(f"Gleaning iteration {now_glean_index + 1}: no 'entities' key in response")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Gleaning entity JSON parsing error for event , iteration {now_glean_index + 1}: {e}")
+                    logger.error(f"Failed to parse gleaning response: '{glean_entity_result}'")
+
+                if now_glean_index == config.event_extract_max_gleaning - 1:
+                    break
+
+                if_loop_entity_result = await use_llm_func(event_extract_if_loop_prompt, history_messages=entity_history)
+                if_loop_entity_result = if_loop_entity_result.strip().strip('"').strip("'").lower()
+                # logger.info(f"Continue gleaning decision for chunk {chunk_key}: '{if_loop_entity_result}'")
+                if if_loop_entity_result != "yes":
+                    # logger.info(f"Stopping gleaning for chunk {chunk_key} after {now_glean_index + 1} iterations")
+                    break
+            
+            # Process event data
+            logger.info(f"Processing {len(combined_entity_data.get('entities', []))}  entities for event before merge")
+
+            final_events = defaultdict(list)
+
+            for event_obj in maybe_events.values():       
+                event_id = event_obj["id"]
+                final_event_id = compute_mdhash_id(f"{event_obj['sentence']}-{event_obj['start_time']}-{event_obj['end_time']}-{event_obj['time_static']}", prefix="event-")
+                for entity in combined_entity_data.get("entities", []):
+                    entity_event_ids = entity.get("event_id", "")
+                    event_ids_list = entity_event_ids.split("<SEP>") if entity_event_ids else []
+                    if event_id in event_ids_list:
+                        this_entity_obj = {
+                            "entity_name": entity["id"],
+                            "type": entity["type"],                       
+                            "description": entity["description"],
+                        }
+                        event_obj["entities"].append(this_entity_obj)  
+                        event_obj["event_id"]= final_event_id 
+                final_events[final_event_id].append(event_obj)
+            logger.info(f"Successfully processed {len(maybe_events)} unique events for chunk {chunk_key}")
+            
+            already_processed += 1
+            
+            now_ticks = PROMPTS["process_tickers"][already_processed % len(PROMPTS["process_tickers"])]
+            print(f"{now_ticks} Event extraction: {already_processed}({already_processed*100//len(ordered_chunks)}%) chunks, "
+                  f"{already_events} events\r", end="", flush=True)
+            return dict(final_events)
+            
+        except Exception as e:
+            already_processed += 1
+            logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
+            return {},{}
+
+    async def _process_2_step(chunk_key):
+        event_dict,event_2_llm_dict = await _process_2_step_events(chunk_key)
+        return await _process_2_step_entities(event_dict,event_2_llm_dict)
+    
     event_extraction_start = time.time()
     try:
-        tasks = [_process_events_only(c) for c in ordered_chunks]
+        tasks = [_process_all(c) for c in ordered_chunks]##一步抽取
+        #tasks = [_process_2_step(c) for c in ordered_chunks]##两步抽取
         event_results = await asyncio.gather(*tasks, return_exceptions=True)
         logger.info(f"\nEvent extraction completed, processing {len(event_results)} results")
         
@@ -688,6 +966,10 @@ async def extract_events(
                     logger.debug(f"Key {k} already exists, skip")
                 
         logger.info(f"Event extraction complete: {len(all_maybe_events)} unique events")
+        events_cache_file = os.path.join(working_dir, "extract_events.json")
+        from ._utils import write_json
+        write_json(all_maybe_events, events_cache_file)
+        logger.info(f"Saved all_maybe_events after event extraction to file: {events_cache_file}")
     except Exception as e:
         logger.error(f"Error during event extraction phase: {e}")
         return None, {"failed": True, "phase": "event_extraction"}
@@ -696,9 +978,48 @@ async def extract_events(
     
     wat_extraction_start = time.time()
     logger.info("=== WAT ENTITY LINKING PHASE ===")
+
     try:
-        all_maybe_events = await ner_extractor.extract_entities_from_events(all_maybe_events)
-        ####TODO 从所有事件中提取实体节点，然后对实体节点消歧。
+        # 检查是否存在all_maybe_events.json文件,存在则加载，不存在时才执行以下提取代码
+        events_cache_file = os.path.join(working_dir, "all_maybe_events.json")
+        new_docs = {}
+        if os.path.exists(events_cache_file):
+            # 如果文件存在，直接加载
+            from ._utils import load_json
+            all_maybe_events = load_json(events_cache_file)
+            logger.info(f"Loaded all_maybe_events from cache file: {events_cache_file}")
+        else:
+            # 文件不存在，执行实体提取
+            all_maybe_events = await ner_extractor.extract_entities_from_events(all_maybe_events)
+            
+            # 在保存之前，将WATAnnotation对象转换为字典格式
+            def convert_wat_annotations_to_dict(events_data):
+                converted_data = {}
+                for event_id, event_list in events_data.items():
+                    converted_data[event_id] = []
+                    for event in event_list:
+                        # 复制事件数据
+                        converted_event = event.copy()
+                        # 检查并转换wat字段中的WATAnnotation对象
+                        if 'wat' in converted_event and converted_event['wat']:
+                            wat_list = converted_event['wat']
+                            converted_wat_list = []
+                            for wat_item in wat_list:
+                                # 如果是WATAnnotation对象，转换为字典
+                                if hasattr(wat_item, 'as_dict'):
+                                    converted_wat_list.append(wat_item.as_dict)
+                                else:
+                                    converted_wat_list.append(wat_item)
+                            converted_event['wat'] = converted_wat_list
+                        converted_data[event_id].append(converted_event)
+                return converted_data
+            
+            # 转换数据并保存
+            converted_events = convert_wat_annotations_to_dict(all_maybe_events)
+            from ._utils import write_json
+            write_json(converted_events, events_cache_file)
+            logger.info(f"Saved all_maybe_events to file: {events_cache_file}")
+            
         logger.info("WAT entity extraction completed")
 
     except Exception as e:
@@ -716,21 +1037,72 @@ async def extract_events(
     
     phase_times["event_merging"] = time.time() - event_merging_start
 
-    entity_merging_start = time.time()
-    maybe_entities = all_maybe_entities
-    all_entity_data = []
-    for k, v in maybe_entities.items():
-        entity_data = await _merge_entities_then_upsert(v[0]["wiki_id"],k, v, dyg_inst, global_config)
-        all_entity_data.append(entity_data)
-    
-    for entity_data in all_entity_data:
-        if "wat" in entity_data and hasattr(entity_data["wat"], "as_dict"):
-            entity_data["wat"] = entity_data["wat"].as_dict
+    entity_extraction_start = time.time()
+    all_maybe_entities = {}
+    for event_data in all_events_data:##TODO'str' object has no attribute 'get', took 2575.5298s
+        entity_list = event_data.get("entities", [])
+        source_id = event_data.get("source_id", "")
+        for entity in entity_list:
+            entity_name = entity.get("entity_name", "")
+            entity_type = entity.get("type", "")
+            description = entity.get("description", "")
             
+            if entity_name:
+                if entity_name in all_maybe_entities:
+                    existing_entity = all_maybe_entities[entity_name]
+                
+                    if existing_entity:
+                        # 更新已存在的实体
+                        # 合并描述，取较长的
+                        descriptions = [description] + [existing_entity["description"]]
+                        new_description = max(descriptions, key=len) if descriptions else ""
+                        
+                        # 合并source_id
+                        existing_source_id = existing_entity.get("source_id", "")
+                        new_source_id = source_id
+                        
+                        if not existing_source_id:
+                            # 如果已有的source_id为空，直接使用新的
+                            final_source_id = new_source_id
+                        elif new_source_id and new_source_id not in existing_source_id:
+                            # 如果新的source_id不为空且不在已有的source_id中，使用<SEP>连接
+                            final_source_id = f"{existing_source_id}<SEP>{new_source_id}"
+                        else:
+                            # 否则（新的source_id已存在或为空），保持原有的source_id不变
+                            final_source_id = existing_source_id
+                        
+                        # 更新已存在的实体对象
+                        all_maybe_entities[entity_name] = {
+                            "entity_name": entity_name,
+                            "type": entity_type,
+                            "description": new_description,
+                            "source_id": final_source_id
+                        }
+                        logger.debug(f"Updated existing entity: {entity_name}")
+                        
+                else:
+                    # 创建新实体并添加
+                    entity_obj = {
+                        "entity_name": entity_name,
+                        "type": entity_type,
+                        "description": description,
+                        "source_id": source_id
+                    }
+                    all_maybe_entities[entity_name] = entity_obj
+                    logger.debug(f"Added new entity: {entity_name}")
+
+    phase_times["entity_extract"] = time.time() - entity_extraction_start
+    ####TODO 对实体节点消歧。  (已提取实体节点)  
+
+    entity_merging_start = time.time()
+    all_entities_data = []
+    maybe_entities = all_maybe_entities
+    for k, v in maybe_entities.items():
+        entity_data = await _merge_entities_then_upsert(k, v, dyg_inst, global_config)
+        all_entities_data.append(entity_data)
+    
     phase_times["entity_merging"] = time.time() - entity_merging_start
-    
-    
-    
+
 
     relationship_computation_start = time.time()
     # if len(maybe_events) > 1:
@@ -768,30 +1140,27 @@ async def extract_events(
         logger.warning("No events found, maybe your LLM is not working")
         return None, {}
         
-    events_vdb_update_start = time.time()##TODO_VDB_STORAGE
+    vdb_update_start = time.time()##TODO_VDB_STORAGE
     if events_vdb is not None and len(all_events_data) > 0:
         events_for_vdb = {}
         for dp in all_events_data:
-            event_content_for_vdb = dp["sentence"]
+            event_content_for_vdb = dp["sentence"]+dp.get("context", "")
             
             events_for_vdb[dp["event_id"]] = {
                 "content": event_content_for_vdb,
-                "event_id": dp["event_id"],
-                "time_point": dp["time_point"],
-                "time_interval": dp["time_interval"],
-                "time_static": dp["time_static"],
                 "sentence": dp["sentence"],
                 "context": dp.get("context", ""),
-                "source_id": dp.get("source_id", "")
+                # "event_id": dp["event_id"],
+                "start_time": dp["start_time"],
+                "end_time": dp["end_time"],
+                "time_static": dp["time_static"],
+                # "source_id": dp.get("source_id", ""),
+                # "entities": dp.get("entities", []),
+                # "wat": dp.get("wat", []),
+                # "entities_involved": dp.get("entities_involved", [])
             }
         
         try:
-            if config.enable_timestamp_encoding:
-                logger.info(f"Using timestamp-enhanced vector storage for events")
-                for event_id, event_data in events_for_vdb.items():
-                    if event_data["timestamp"] == "":
-                        event_data["timestamp"] = "static"
-            
             await events_vdb.upsert(events_for_vdb)
             logger.info(f"Updated events vector database with {len(events_for_vdb)} events")
         except Exception as e:
@@ -800,9 +1169,31 @@ async def extract_events(
             else:
                 logger.error(f"Error during events_vdb.upsert: {e}", exc_info=True)
             logger.warning("Failed to update events vector database, but continuing")
-    
-    phase_times["events_vdb_update"] = time.time() - events_vdb_update_start
-    
+
+        if len(all_entities_data) > 0:
+            entities_for_vdb = {}
+            for dp in all_entities_data:
+                entity_content_for_vdb = dp["description"]
+
+                entities_for_vdb[dp["entity_name"]] = {
+                    "content": entity_content_for_vdb,
+                    "entity_name": dp["entity_name"],
+                    "type": dp.get("type", ""),
+                    "description": dp.get("description", ""),
+                    "source_id": dp.get("source_id", ""),
+                }
+            
+            try:
+                await events_vdb.upsert(entities_for_vdb)
+                logger.info(f"Updated entities vector database with {len(entities_for_vdb)} entities")
+            except Exception as e:
+                if "out of memory" in str(e).lower():
+                    logger.error(f"CUDA OOM during entities_vdb.upsert: {e}", exc_info=True)
+                else:
+                    logger.error(f"Error during entities_vdb.upsert: {e}", exc_info=True)
+                logger.warning("Failed to update entities vector database, but continuing")
+    phase_times["vdb_update"] = time.time() - vdb_update_start
+
     total_chunks = already_processed
     success_rate = 100.0 if failed_chunks == 0 else ((already_processed - failed_chunks) / already_processed * 100)
     
@@ -832,6 +1223,7 @@ async def extract_events(
     logger.info(f"Event Extraction (LLM): {phase_times['event_extraction']:.2f}s")
     logger.info(f"WAT Entity Extraction: {phase_times['wat_extraction']:.2f}s")
     logger.info(f"Event Node Merging: {phase_times['event_merging']:.2f}s")
+    logger.info(f"Entity Node Merging: {phase_times['entity_merging']:.2f}s")
     logger.info(f"Relationship Computation: {phase_times['relationship_computation']:.2f}s")
     logger.info(f"Vector Database Update: {phase_times['events_vdb_update']:.2f}s")
     logger.info(f"Total Time: {total_extraction_time:.2f}s")
@@ -869,35 +1261,29 @@ async def _merge_events_then_upsert(##TODO_merge_events
     already_sentences = []
     already_contexts = []
     already_source_ids = []
-    already_entities_involved = []
-    already_time_points = []
-    already_time_intervals = []
+    already_start_time = []
+    already_end_time = []
     already_time_statics = []
+    already_entities = []
+    already_wats = []
+    already_entities_involved = []
 
     already_event = await dyg_inst.get_node(event_id)
     if already_event is not None:
         already_sentences.append(already_event.get("sentence", ""))
         already_contexts.append(already_event.get("context", ""))
-        already_time_points.append(already_event.get("time_point", ""))
-        already_time_intervals.append(already_event.get("time_interval", ""))
+        already_start_time.append(already_event.get("start_time", ""))
+        already_end_time.append(already_event.get("end_time", ""))
         already_time_statics.append(already_event.get("time_static", False))
+        already_entities.extend(already_event.get("entities", []))
+        already_wats.extend(already_event.get("wats", []))  
+        already_entities_involved.extend(already_event.get("entities_involved", []))
         already_source_ids.extend(
             split_string_by_multi_markers(already_event.get("source_id", ""), [GRAPH_FIELD_SEP])
         )
-        existing_entities = already_event.get("entities_involved", [])
-        if isinstance(existing_entities, list):
-            already_entities_involved.extend(existing_entities)
-        elif isinstance(existing_entities, str):
-            already_entities_involved.extend(existing_entities.split(",") if existing_entities else [])
-    time_points = [dp.get("time_point", "") for dp in events_data] + already_time_points
-    time_point = max(time_points, key=len) if time_points else ""
-    
-    time_intervals = [dp.get("time_interval", "") for dp in events_data] + already_time_intervals
-    time_interval = max(time_intervals, key=len) if time_intervals else ""
-    
     # 检查是否有任何事件标记为静态时间
     time_statics = [dp.get("time_static", False) for dp in events_data] + already_time_statics
-    time_static = any(time_statics)
+    time_static = all(time_statics)
     
     sentences = [dp.get("sentence", "") for dp in events_data] + already_sentences
     sentence = max(sentences, key=len) if sentences else ""
@@ -905,31 +1291,90 @@ async def _merge_events_then_upsert(##TODO_merge_events
     contexts = [dp.get("context", "") for dp in events_data] + already_contexts
     context = max(contexts, key=len) if contexts else ""
     
+    all_entities = []
+    all_wats_involved = []
     all_entities_involved = []
     for dp in events_data:
-        entities = dp.get("entities_involved", [])
-        if isinstance(entities, list):
-            all_entities_involved.extend(entities)
-        elif isinstance(entities, str) and entities:
-            all_entities_involved.extend(entities.split(","))
-    
+        #entities：大模型提取的
+        #entities_involved：wat提取的
+        entities = dp.get("entities", [])
+        wats = dp.get("wat", [])
+        entities_involved = dp.get("entities_involved", [])
+        all_wats_involved.extend(wats)
+        all_entities.extend(entities)
+        all_entities_involved.extend(entities_involved)
+    all_entities.extend(already_entities)
+    all_wats_involved.extend(already_wats)
     all_entities_involved.extend(already_entities_involved)
-    entities_involved = list(set([e.strip() for e in all_entities_involved if e and e.strip()]))
-        
+    
+    # 使用字典按 wiki_id 对wat去重（保留第一个出现的）
+    wat_dict = {}
+    # 统一处理all_wats_involved，无论是WATAnnotation对象还是字典
+    if isinstance(all_wats_involved, list):
+        for w in all_wats_involved:
+            if not w:
+                continue
+            # 如果是WATAnnotation对象
+            if hasattr(w, 'wiki_id'):
+                if w.wiki_id not in wat_dict:
+                    wat_dict[w.wiki_id] = w
+            # 如果是字典格式
+            elif isinstance(w, dict) and 'wiki_id' in w:
+                if w['wiki_id'] not in wat_dict:
+                    wat_dict[w['wiki_id']] = w
+        wat = list(wat_dict.values())
+    else:
+        # 原有的处理单个WATAnnotation对象的逻辑
+        if isinstance(all_wats_involved, WATAnnotation):
+            all_wats_involved = [w for w in all_wats_involved if w]
+            for w in all_wats_involved:
+                if w and hasattr(w, 'wiki_id'):
+                    if w.wiki_id not in wat_dict:  # 按 wiki_id 去重
+                        wat_dict[w.wiki_id] = w
+            wat = list(wat_dict.values())
+        else:
+            wat = []
+
+    merged_dict = {}
+    for entity in all_entities:
+        name = entity['entity_name']
+        if name not in merged_dict:
+            # 如果是第一次出现，直接添加到字典
+            merged_dict[name] = entity.copy()
+        else:
+            # 如果已存在，合并description（可以根据需要修改合并逻辑）
+            existing = merged_dict[name]
+            # 假设我们想要保留更长的描述，或者用特定分隔符合并
+            if len(entity['description']) > len(existing['description']):
+                existing['description'] = entity['description']
+            # 或者合并两个描述：
+            # if entity['description'] not in existing['description']:
+            #     existing['description'] += " | " + entity['description']  
+
+    entities = list(merged_dict.values())  
+
+    for entities_involved in all_entities_involved:
+        if entities_involved not in already_entities_involved:
+            already_entities_involved.append(entities_involved)
+
     source_id = GRAPH_FIELD_SEP.join(
         set([dp.get("source_id", "") for dp in events_data] + already_source_ids)
     )
     
+    start_time = min([dp.get("start_time", "") for dp in events_data])
+    end_time = max([dp.get("end_time", "") for dp in events_data])
+
     event_data = dict(
-        time_point=time_point,
-        time_interval=time_interval,
-        time_static=time_static,
+        event_id = event_id,
         sentence=sentence,
         context=context,
+        start_time=start_time,
+        end_time=end_time,
+        time_static=time_static,
         source_id=source_id,
-        entities_involved=entities_involved,
-        participants="",
-        location="",
+        entities = entities,
+        wat = wat,
+        entities_involved=already_entities_involved,
     )
     
     await dyg_inst.upsert_node(
@@ -941,24 +1386,22 @@ async def _merge_events_then_upsert(##TODO_merge_events
     return event_data
 
 async def _merge_entities_then_upsert(
-    wiki_id: str,
     entity_name: str,
     entities_data: list[dict],
     dyg_inst: BaseGraphStorage,
     global_config: dict,
 ):
     """
-    合并实体数据并将其更新到图存储中，支持基于wikiid的实体消歧。
+    合并实体数据并将其更新到图存储中
     
     消歧规则：
-    1. 提取实体的wikiid部分
-    2. 收集所有具有相同wikiid的节点进行合并
+    1. 提取实体名称
+    2. 收集所有具有相同名称的节点进行合并
     3. 合并规则：
-       - event_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-       - sentence: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-       - source_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-       - entity_name: 使用最长的一个作为该属性，且将节点名称也更新为该属性的值
-       - wat：使用所有节点中第一个被找到的的wat值作为该值
+        "entity_name": 不变
+        "type": 不变
+        "description": 保留最长的
+        "source_id": 不一致的合并
     
     Args:
         entity_name (str): 实体名称
@@ -969,93 +1412,38 @@ async def _merge_entities_then_upsert(
     Returns:
         dict: 合并后的实体数据
     """
-    # 首先收集所有具有相同wikiid的实体(未完成)
-    wiki_entities = {}
+    type = entities_data.get("type", "")
+    descriptions = entities_data.get("description", "")
+    source_id = entities_data.get("source_id", "")
+    
+    # 首先收集所有具有相同名称的实体
     already_entity = None
     # 获取已存在的实体数据
     already_entity = await dyg_inst.get_node(entity_name)##TODO,change to use wiki id
     if already_entity is not None:
-        wiki_entities[entity_name] = already_entity
-    
-    # 收集所有相关的实体数据
-    for entity_data in entities_data:
-        name = entity_data.get("entity_name", "")
-        if name and entity_data.get("wiki_id", "") == wiki_id:
-            wiki_entities[name] = entity_data
-        
-    # 执行实体消歧合并
-    # 收集所有实体的数据
-    all_event_ids = []
-    all_sentences = []
-    all_source_ids = []
-    all_entity_names = []
-    all_wats = []
-    
-    for name, data in wiki_entities.items():
-        # 收集event_id
-        event_id = data.get("event_id", "")
-        if event_id:
-            all_event_ids.append(event_id)
-            
-        # 收集sentence
-        sentence = data.get("sentence", "")
-        if sentence:
-            all_sentences.append(sentence)
-            
-        # 收集source_id
-        source_id = data.get("source_id", "")
-        if source_id:
-            all_source_ids.append(source_id)
-            
-        # 收集entity_name
-        all_entity_names.append(name)
-        
-        # 收集wat（只收集非空的）
-        wat = data.get("wat")
-        if wat:
-            all_wats.append(wat)
-    
-    # 应用合并规则
-    # event_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-    merged_event_id = GRAPH_FIELD_SEP.join(all_event_ids) if all_event_ids else ""
-    
-    # sentence: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-    merged_sentence = GRAPH_FIELD_SEP.join(all_sentences) if all_sentences else ""
-    
-    # source_id: 使用分隔符<SEP>依顺序依次连接全部节点的对应属性
-    merged_source_id = GRAPH_FIELD_SEP.join(all_source_ids) if all_source_ids else ""
-    
-    # entity_name: 使用最长的一个作为该属性，且将节点名称也更新为该属性的值
-    merged_entity_name = max(all_entity_names, key=len) if all_entity_names else entity_name
-    
-    # wat：使用所有节点中第一个被找到的的wat值作为该值
-    merged_wat = all_wats[0] if all_wats else None
-    
-    # 构建最终的实体数据字典
+        descriptions = [descriptions] + [already_entity["description"]]
+        new_description = max(descriptions, key=len) if descriptions else ""
+        descriptions = new_description
+        new_source_id = entities_data.get("source_id", "")
+        if not source_id:
+            source_id = new_source_id
+        elif new_source_id and new_source_id not in source_id:
+            source_id = f"{source_id}<SEP>{new_source_id}"
+        else:
+            source_id = source_id
+                    
     entity_data = dict(
-        event_id=merged_event_id,
-        sentence=merged_sentence,
-        source_id=merged_source_id,
-        entity_name=merged_entity_name,
-        wat=merged_wat,
+        entity_name = entity_name,
+        type = type,
+        description = descriptions,
+        source_id = source_id,
     )
-    
-    # 删除其他具有相同wikiid的实体节点
-    for name in wiki_entities.keys():
-        if name != merged_entity_name:
-            try:
-                await dyg_inst.delete_node(name)
-            except Exception as e:
-                logger.warning(f"Failed to delete node {name}: {e}")
-    
-    # 将合并后的实体数据更新到图存储中
+
     await dyg_inst.upsert_node(
-        merged_entity_name,
+        entity_name,
         node_data=entity_data,
     )
-    
-    # 添加实体ID到返回数据中
-    entity_data["entity_name"] = merged_entity_name
+
     return entity_data
 @monitor_performance
 async def _merge_event_relations_then_upsert(##TODO_MERGE
@@ -1471,10 +1859,10 @@ class BatchNERExtractor:
             for idx, wat in enumerate(wat_all):
                 wat_name = f"{wat.spot}_{wat.wiki_id}"
                 entity_envolved.append(wat_name)
-                original_name = events_data[event_id][event_idx]["entities"][idx]
-                events_data[event_id][event_idx]["entities"][idx] = f"{original_name}_{wat.wiki_id}"
+                original_name = events_data[event_id][event_idx]["entities"][idx]["entity_name"]
+                events_data[event_id][event_idx]["entities"][idx]["entity_name"] = f"{original_name}_{wat.wiki_id}"
             events_data[event_id][event_idx]["entities_involved"] = entity_envolved
-        
+
         total_entities = sum(len(entities) for entities in entities_list)
         logger.info(f"wat extraction completed: {total_entities} entities extracted")
         

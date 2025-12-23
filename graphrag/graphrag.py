@@ -90,8 +90,8 @@ class GraphRAG:
         ],
         List[Dict[str, Union[str, int]]],
     ] = chunking_by_token_size
-    chunk_token_size: int = 1200
-    chunk_overlap_token_size: int = 64
+    chunk_token_size: int = 256
+    chunk_overlap_token_size: int = 50
     tiktoken_model_name: str = "cl100k_base"
 
     # dynamic event extraction
@@ -543,6 +543,140 @@ class GraphRAG:
         await self._query_done()
         return response
 
+    def clean_to_json(current_event_result: str) -> str:
+        """
+        Clean the LLM response to ensure it's valid JSON format.
+        
+        Args:
+            current_event_result (str): Raw response from LLM
+            
+        Returns:
+            str: Cleaned JSON string
+        """
+        if not current_event_result:
+            return ""
+           
+        start_idx = current_event_result.find('{')
+        end_idx = current_event_result.rfind('}') + 1
+        return current_event_result[start_idx:end_idx]
+
+    async def entity_to_timeline_2step(self, entity: str):
+        """
+        Generate timelines for a given entity based on related events in the graph.
+        
+        Args:
+            entity (str): The entity name to generate timelines for
+            
+        Returns:
+            dict: The timeline analysis result from the LLM
+        """
+        # 1,从图中获得entity对应的实体节点（图中实体节点存储方式为实体名_wiki链接，请根据输入的entity获得所有实体名与entity一致的节点）
+        all_entity_nodes = []
+        
+        # Get all nodes from the graph storage and filter for entity nodes matching the input entity
+        all_nodes = await self.event_dynamic_graph.get_node_ids()  # Get all node IDs
+        
+        for node_id in all_nodes:
+            node_data = await self.event_dynamic_graph.get_node(node_id)
+            if node_data and 'entity_name' in node_data:  # Check if it's an entity node
+                # Extract entity name from format "entity_name_wiki_link" or similar
+                node_entity_name = node_data['entity_name']
+                actual_entity_name = node_entity_name.rsplit('_', 1)[0]
+                if actual_entity_name.lower() == entity.lower():
+                    all_entity_nodes.append((node_id, node_data))
+        
+        # If no entity nodes found with the exact name, try partial matching
+        if not all_entity_nodes:
+            for node_id in all_nodes:
+                node_data = await self.event_dynamic_graph.get_node(node_id)
+                if node_data and 'entity_name' in node_data:
+                    node_entity_name = node_data['entity_name']
+                    if entity.lower() in node_entity_name.lower() or node_entity_name.lower() in entity.lower():
+                        all_entity_nodes.append((node_id, node_data))
+
+        # 2，对获得的所有实体节点：从图中获取所有包含该实体的事件节点（通过边）
+        all_events = {}
+        event_counter = 1
+        
+        for entity_node_id, entity_node_data in all_entity_nodes:
+            # Get all edges connected to this entity node
+            # We need to find edges where this entity node is connected to event nodes
+            try:
+                # Get edges where this entity node is involved
+                connected_nodes = await self.event_dynamic_graph.get_node_neighbors(entity_node_id)
+                
+                for connected_node_id in connected_nodes:
+                    connected_node_data = await self.event_dynamic_graph.get_node(connected_node_id)
+                    
+                    # Check if the connected node is an event node
+                    if connected_node_data and ('sentence' in connected_node_data or 
+                                              'start_time' in connected_node_data or 
+                                              'end_time' in connected_node_data):
+                        # This appears to be an event node
+                        event_id = f"E{event_counter}"
+                        all_events[event_id] = connected_node_data
+                        event_counter += 1
+            except Exception as e:
+                logger.warning(f"Error getting neighbors for entity node {entity_node_id}: {e}")
+                continue
+
+        # 3，将所有事件节点放入一个列表all_events中，且为每个节点分配一个唯一id:E_num(如E1,E2)，形如{E1：{该id的节点数据}}
+        # 对all_events中的每个元素，仅保留唯一id(E_num),sentence，context，并放入新列表events_for_llm中
+        events_for_llm = []
+        for i, (event_id, event_data) in enumerate(all_events.items()):
+            event_entry = {
+                "id_to_rank": f"E_{i}",
+                "original_id":event_id,
+                "sentence": event_data.get("sentence", ""),
+                "context": event_data.get("context", ""),
+                "start_time": event_data.get("start_time", ""),
+                "end_time": event_data.get("end_time", "")
+            }
+            events_for_llm.append(event_entry)
+
+        # 4，调用大模型，使用prompts.py中的Prompt[entity_to_timeline]([entity_name]=entity,event_list=events_for_llm)
+        if not events_for_llm:
+            # If no events found, return an empty timeline result
+            return {"timelines": []}
+        
+        # Prepare the prompt with the entity name and event list
+        entity_to_timeline_prompt = PROMPTS["entity_to_timeline_analysis"]
+        entity_to_timeline_prompt = entity_to_timeline_prompt.replace("[entity_name]", entity)
+        entity_to_timeline_prompt = entity_to_timeline_prompt.replace("[event_list]", json.dumps(events_for_llm, ensure_ascii=False))
+        
+        # Call the LLM with the prepared prompt
+        global_config = self.get_config_dict()
+        use_model_func = global_config.get("best_model_func")
+        
+        llm_kwargs = global_config.get("special_community_report_llm_kwargs", {})
+        if not llm_kwargs:
+            llm_kwargs = {"response_format": {"type": "json_object"}}
+        
+        try:
+            result_llm = await use_model_func(entity_to_timeline_prompt, **llm_kwargs)
+            result = self.clean_to_json(result_llm)
+            # Parse the result
+            try:
+                parsed_result = json.loads(result)
+                return parsed_result
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse LLM response as JSON: {result}")
+                # Try to extract JSON from the response using regex
+                match = re.search(r"\{.*\}", result, re.DOTALL)
+                if match:
+                    try:
+                        parsed_result = json.loads(match.group(0))
+                        return parsed_result
+                    except json.JSONDecodeError:
+                        logger.error("Failed to extract and parse JSON from LLM response")
+                        return {"timelines": []}
+                else:
+                    logger.error("No JSON-like structure found in LLM response")
+                    return {"timelines": []}
+        except Exception as e:
+            logger.error(f"Error calling LLM for entity timeline: {e}")
+            return {"timelines": []}
+
     async def dynamic_query(self, query: str, param: QueryParam):
         logger.info(f"Executing dynamic event query: {query}")
         
@@ -551,6 +685,9 @@ class GraphRAG:
         )
         logger.info(f"Extracted time constraints: {time_constraints}")
         logger.info(f"Extracted entities: {entities}")
+        
+        for entity in entities:
+            entity_timeline = await self.get_entity_timeline(entity)
         
         topk1 = param.topk1 or 2000  
         et_top_k = param.et_top_k or 20   
@@ -936,10 +1073,10 @@ class GraphRAG:
                 else:
                     logger.warning(f"Failed to reload graph from {graph_file}, proceeding with extraction")
                     # 如果加载失败，则继续执行提取
-                    await self._perform_event_extraction(inserting_chunks)
+                    await self._perform_event_extraction(inserting_chunks,self.working_dir)
             else:
                 # 执行事件提取
-                await self._perform_event_extraction(inserting_chunks)
+                await self._perform_event_extraction(inserting_chunks,self.working_dir)
         
             torch.cuda.empty_cache()
             time.sleep(2)
@@ -948,7 +1085,7 @@ class GraphRAG:
             await self._insert_done()
 
 
-    async def _perform_event_extraction(self, inserting_chunks):
+    async def _perform_event_extraction(self, inserting_chunks,working_dir):
         """执行事件提取的核心逻辑"""
         maybe_new_dyg, extraction_stats = await extract_events(
             inserting_chunks,
@@ -956,6 +1093,7 @@ class GraphRAG:
             events_vdb = self.events_vdb,
             global_config={**self.get_config_dict(), "events_vdb": self.events_vdb},
             using_amazon_bedrock=self.using_amazon_bedrock,
+            working_dir = working_dir
         )
         self.extraction_stats = extraction_stats
     

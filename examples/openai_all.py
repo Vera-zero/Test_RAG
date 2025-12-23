@@ -191,7 +191,7 @@ logger.info(f"Start processing, total {total_docs} documents to process.")
 
 all_docs = []
 for idx, obj in enumerate(tqdm(corpus_data, desc="Loading docs", total=total_docs)):
-    enriched_content = f"Title: {obj['title']}\nDocument ID: {obj['doc_id']}\n\n{obj['context']}"
+    enriched_content = f"Title: {obj['title']}\n\n{obj['context']}"
     all_docs.append(enriched_content)
  
 # insert_docs = all_docs[:10]
