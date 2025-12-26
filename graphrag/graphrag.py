@@ -37,6 +37,7 @@ from ._llm import (
 from ._op import (
     chunking_by_token_size,
     extract_events,
+    _merge_timelines_then_upsert,
     get_chunks,
     normalize_timestamp,
 )
@@ -543,7 +544,7 @@ class GraphRAG:
         await self._query_done()
         return response
 
-    def clean_to_json(current_event_result: str) -> str:
+    def clean_to_json(self,current_event_result: str) -> str:
         """
         Clean the LLM response to ensure it's valid JSON format.
         
@@ -560,7 +561,7 @@ class GraphRAG:
         end_idx = current_event_result.rfind('}') + 1
         return current_event_result[start_idx:end_idx]
 
-    async def entity_to_timeline_2step(self, entity: str):
+    async def timeline_2step_analysis(self, entity: str, all_events_nodes):
         """
         Generate timelines for a given entity based on related events in the graph.
         
@@ -570,74 +571,39 @@ class GraphRAG:
         Returns:
             dict: The timeline analysis result from the LLM
         """
-        # 1,从图中获得entity对应的实体节点（图中实体节点存储方式为实体名_wiki链接，请根据输入的entity获得所有实体名与entity一致的节点）
-        all_entity_nodes = []
         
-        # Get all nodes from the graph storage and filter for entity nodes matching the input entity
-        all_nodes = await self.event_dynamic_graph.get_node_ids()  # Get all node IDs
-        
-        for node_id in all_nodes:
-            node_data = await self.event_dynamic_graph.get_node(node_id)
-            if node_data and 'entity_name' in node_data:  # Check if it's an entity node
-                # Extract entity name from format "entity_name_wiki_link" or similar
-                node_entity_name = node_data['entity_name']
-                actual_entity_name = node_entity_name.rsplit('_', 1)[0]
-                if actual_entity_name.lower() == entity.lower():
-                    all_entity_nodes.append((node_id, node_data))
-        
-        # If no entity nodes found with the exact name, try partial matching
-        if not all_entity_nodes:
-            for node_id in all_nodes:
-                node_data = await self.event_dynamic_graph.get_node(node_id)
-                if node_data and 'entity_name' in node_data:
-                    node_entity_name = node_data['entity_name']
-                    if entity.lower() in node_entity_name.lower() or node_entity_name.lower() in entity.lower():
-                        all_entity_nodes.append((node_id, node_data))
-
-        # 2，对获得的所有实体节点：从图中获取所有包含该实体的事件节点（通过边）
-        all_events = {}
-        event_counter = 1
-        
-        for entity_node_id, entity_node_data in all_entity_nodes:
-            # Get all edges connected to this entity node
-            # We need to find edges where this entity node is connected to event nodes
+        # 1，从图中获取所有包含该实体的事件节点（通过边）
+        rel_events = defaultdict(list)
+        event_counter = 0
+        for event_id in all_events_nodes:
             try:
                 # Get edges where this entity node is involved
-                connected_nodes = await self.event_dynamic_graph.get_node_neighbors(entity_node_id)
-                
-                for connected_node_id in connected_nodes:
-                    connected_node_data = await self.event_dynamic_graph.get_node(connected_node_id)
-                    
-                    # Check if the connected node is an event node
-                    if connected_node_data and ('sentence' in connected_node_data or 
-                                              'start_time' in connected_node_data or 
-                                              'end_time' in connected_node_data):
-                        # This appears to be an event node
-                        event_id = f"E{event_counter}"
-                        all_events[event_id] = connected_node_data
-                        event_counter += 1
+                if await self.event_dynamic_graph.has_edge(event_id,entity):
+                    rel_events[event_id] = all_events_nodes[event_id]
+                    event_counter += 1
             except Exception as e:
-                logger.warning(f"Error getting neighbors for entity node {entity_node_id}: {e}")
+                logger.warning(f"Error getting neighbors for entity node {entity}: {e}")
                 continue
 
-        # 3，将所有事件节点放入一个列表all_events中，且为每个节点分配一个唯一id:E_num(如E1,E2)，形如{E1：{该id的节点数据}}
+        # 2，将所有事件节点放入一个列表rel_events中，且为每个节点分配一个唯一id:E_num(如E1,E2)，形如{E1：{该id的节点数据}}
         # 对all_events中的每个元素，仅保留唯一id(E_num),sentence，context，并放入新列表events_for_llm中
         events_for_llm = []
-        for i, (event_id, event_data) in enumerate(all_events.items()):
+        for i, event_id in enumerate(rel_events):
+            event_data = rel_events[event_id]
             event_entry = {
                 "id_to_rank": f"E_{i}",
-                "original_id":event_id,
-                "sentence": event_data.get("sentence", ""),
-                "context": event_data.get("context", ""),
-                "start_time": event_data.get("start_time", ""),
-                "end_time": event_data.get("end_time", "")
+                "sentence": event_data.get('sentence', ""),
+                "context": event_data.get('context', ""),
+                "start_time": event_data.get('start_time', ""),
+                "end_time": event_data.get('end_time', ""),
+                "time_static":event_data.get('time_static', "")
             }
             events_for_llm.append(event_entry)
 
-        # 4，调用大模型，使用prompts.py中的Prompt[entity_to_timeline]([entity_name]=entity,event_list=events_for_llm)
+        # 3，调用大模型，使用prompts.py中的Prompt[entity_to_timeline]([entity_name]=entity,event_list=events_for_llm)
         if not events_for_llm:
             # If no events found, return an empty timeline result
-            return {"timelines": []}
+            return {"timeline": []}
         
         # Prepare the prompt with the entity name and event list
         entity_to_timeline_prompt = PROMPTS["entity_to_timeline_analysis"]
@@ -648,17 +614,22 @@ class GraphRAG:
         global_config = self.get_config_dict()
         use_model_func = global_config.get("best_model_func")
         
-        llm_kwargs = global_config.get("special_community_report_llm_kwargs", {})
-        if not llm_kwargs:
-            llm_kwargs = {"response_format": {"type": "json_object"}}
-        
+        use_llm_func: callable = global_config["best_model_func"]
+    
         try:
-            result_llm = await use_model_func(entity_to_timeline_prompt, **llm_kwargs)
+            result_llm = await use_llm_func(entity_to_timeline_prompt)
+            if isinstance(result_llm, list):
+                result_llm = result_llm[0]["text"]
+            
             result = self.clean_to_json(result_llm)
+            analysis_result = {"timeline": []}
             # Parse the result
             try:
                 parsed_result = json.loads(result)
-                return parsed_result
+                if isinstance(parsed_result, dict) and "timelines" in parsed_result:
+                    analysis_result["timeline"].extend(parsed_result["timelines"]) 
+                elif isinstance(parsed_result, list) and "timelines" in parsed_result:
+                    analysis_result["timeline"].extend(parsed_result["timelines"]) 
             except json.JSONDecodeError:
                 logger.error(f"Failed to parse LLM response as JSON: {result}")
                 # Try to extract JSON from the response using regex
@@ -666,17 +637,77 @@ class GraphRAG:
                 if match:
                     try:
                         parsed_result = json.loads(match.group(0))
-                        return parsed_result
+                        if isinstance(parsed_result, dict) and "time_lines" in parsed_result:
+                            analysis_result["timelines"].extend(parsed_result["time_lines"]) 
                     except json.JSONDecodeError:
                         logger.error("Failed to extract and parse JSON from LLM response")
-                        return {"timelines": []}
                 else:
                     logger.error("No JSON-like structure found in LLM response")
-                    return {"timelines": []}
         except Exception as e:
             logger.error(f"Error calling LLM for entity timeline: {e}")
-            return {"timelines": []}
+        
+        if not analysis_result["timeline"]:
+            return {"timeline": []}
 
+        times_llm = str(analysis_result["timeline"])
+        event_to_timeline_prompt = PROMPTS["extract_timeline_events"]
+        event_to_timeline_prompt = event_to_timeline_prompt.replace("{timelines}", times_llm)
+        event_to_timeline_prompt = event_to_timeline_prompt.replace("{events}", json.dumps(events_for_llm, ensure_ascii=False))
+        
+        try:
+            timeline_llm = await use_llm_func(event_to_timeline_prompt)
+            if isinstance(timeline_llm, list):
+                timeline_llm = timeline_llm[0]["text"]
+            
+            result = self.clean_to_json(timeline_llm)
+            timeline_result = {"timeline": []}
+            # Parse the result
+            try:
+                parsed_result = json.loads(result)
+                if isinstance(parsed_result, dict) and "timelines" in parsed_result:
+                    timeline_result["timeline"].extend(parsed_result["timelines"])  
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse LLM response as JSON: {result}")
+                # Try to extract JSON from the response using regex
+                match = re.search(r"\{.*\}", result, re.DOTALL)
+                if match:
+                    try:
+                        parsed_result = json.loads(match.group(0))
+                        if isinstance(parsed_result, dict) and "time_lines" in parsed_result:
+                            timeline_result["timeline"].extend(parsed_result["time_lines"]) 
+                    except json.JSONDecodeError:
+                        logger.error("Failed to extract and parse JSON from LLM response")
+                else:
+                    logger.error("No JSON-like structure found in LLM response")
+        except Exception as e:
+            logger.error(f"Error calling LLM for entity timeline: {e}")
+        
+        for timeline in timeline_result["timeline"]:
+            if "rank_events" in timeline and isinstance(timeline["rank_events"], str):
+                # 分割字符串获取所有的 E_i
+                rank_parts = timeline["rank_events"].split("<SEP>")
+                count = 0
+                for i, event_id in enumerate(rel_events):
+                    for j,rank_id in enumerate(rank_parts):
+                        rank_id = rank_id.strip()
+                        temp_id = f"E_{i}"
+                        # 检查 rank_id 是否在 rel_events 的键中
+                        if rank_id == temp_id:
+                            # 用 rel_events 中的值替换
+                            rank_parts[j] = str(event_id)
+                            count += 1
+                            break
+                    if count >= len(rank_parts): break
+                
+                # 重新组合为字符串
+                timeline["rank_events"] = "<SEP>".join(rank_parts)
+                timeline["entity_name"] = entity
+        return timeline_result
+
+    async def get_entity_timeline(self,entity):
+        timeline_list = await self.timeline_2step_analysis(entity)
+
+        return timeline_list
     async def dynamic_query(self, query: str, param: QueryParam):
         logger.info(f"Executing dynamic event query: {query}")
         
@@ -1078,12 +1109,13 @@ class GraphRAG:
                 # 执行事件提取
                 await self._perform_event_extraction(inserting_chunks,self.working_dir)
         
+            await self._timelines_extract_()#时间线生成
+
             torch.cuda.empty_cache()
             time.sleep(2)
        
         finally:
             await self._insert_done()
-
 
     async def _perform_event_extraction(self, inserting_chunks,working_dir):
         """执行事件提取的核心逻辑"""
@@ -1107,7 +1139,54 @@ class GraphRAG:
             logger.warning("No new events found")
             await self._insert_done()
             return
+
+    async def _timelines_extract_(self):
+        """Extract timelines for entities in the graph after event extraction."""
+        if not self.event_dynamic_graph:
+            logger.warning("Event dynamic graph not initialized, skipping timeline extraction")
+            return
         
+        all_nodes = await self.event_dynamic_graph.get_all_nodes()
+        entities = []
+        all_events_nodes  = defaultdict(list)
+        ##获取实体节点、事件节点
+        for node_id in all_nodes:
+            node_data = await self.event_dynamic_graph.get_node(node_id)
+            if node_data :
+                if 'entity_name' in node_data:
+                    entities.append(node_id)
+                elif 'event_id' in node_data:
+                    if node_id not in all_events_nodes:
+                        all_events_nodes[node_id] = node_data
+        
+        logger.info(f"BEGIN : Extracting timelines for {len(entities)} entities in the graph")
+        try:
+            tasks = [self.timeline_2step_analysis(entity, all_events_nodes) for entity in entities]
+            timelines_results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Store or process the timeline_result as needed
+            logger.info(f"Extracted timelines successfully")
+        except Exception as e:
+            logger.error(f"Error extracting timeline : {e}")
+
+        all_timelines = {}
+
+        for timeline in timelines_results:
+            if timeline['timeline'] :
+                name = timeline['timeline'][0].get('timeline_name', '')
+                description = timeline['timeline'][0].get('timeline_description', '')
+                entity = timeline['timeline'][0].get('entity_name', '')
+                line_id = compute_mdhash_id(f"{name}-{description}-{entity}" ,prefix="timeline-")
+                if line_id not in all_timelines:
+                    all_timelines[line_id] = timeline
+        logger.info(f"COMPLETED : Extracted {len(all_timelines)} timelines for entities in the graph")
+
+        for line_id, timeline_data in all_timelines.items():
+            try: 
+                timeline_data = await _merge_timelines_then_upsert(line_id, timeline_data, self.event_dynamic_graph)  
+                logger.info(f"Inserted timeline node {line_id} into event_dynamic_graph")
+            except Exception as e:
+                logger.error(f"Error inserting timeline node {line_id} into event_dynamic_graph: {e}")      
+
     async def _insert_start(self):
         tasks = []
         for storage_inst in [

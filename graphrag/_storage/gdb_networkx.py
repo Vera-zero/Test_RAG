@@ -83,11 +83,22 @@ class NetworkXStorage(BaseGraphStorage):
             # Convert lists in node attributes to JSON strings
             for node, data in graph_copy.nodes(data=True):
                 from graphrag.WAT import WATAnnotation
+                wats = data.get('wat')
+                if wats is not None:
+                    for wat in wats :
+                        if isinstance(wat, WATAnnotation):
+                            wat = json.dumps(wat.as_dict)
+                        if isinstance(wat, list):
+                            wat = json.dumps(wat)
                 for key, value in data.items():
-                    if isinstance(value, WATAnnotation):
-                        data[key] = json.dumps(value.as_dict)
-                    if isinstance(value, list):
+                    if isinstance(value, (list, dict, set, tuple)):
                         data[key] = json.dumps(value)
+                    elif isinstance(value, (bool, int, float, str)) or value is None:
+                        # These types are supported by GraphML, keep them as is
+                        continue
+                    else:
+                        # Convert any other types to string representation
+                        data[key] = str(value)
             
             # Convert lists in edge attributes to JSON strings
             for u, v, data in graph_copy.edges(data=True):

@@ -38,9 +38,9 @@ Input:
 
 Entity: "CompanyXYZ"  
 Events:  
-1. { "sentence": "CompanyXYZ founded", "context": "tech industry", "start_time": "2005-01-01", "end_time": null }  
-2. { "sentence": "First product launch", "context": "product release", "start_time": "2006-03-15", "end_time": null }  
-3. { "sentence": "Expanded to Europe", "context": "global expansion", "start_time": "2010-08-01", "end_time": null }  
+1. { "id_to_rank":E_1,"sentence": "CompanyXYZ founded", "context": "tech industry", "start_time": "2005-01-01", "end_time": null ,"time_static":false}  
+2. { "id_to_rank":E_2,"sentence": "First product launch", "context": "product release", "start_time": "2006-03-15", "end_time": null ,"time_static":false}  
+3. { "id_to_rank":E_3, "sentence": "Expanded to Europe", "context": "global expansion", "start_time": "2010-08-01", "end_time": null ,"time_static":false}  
 
 Output:
 
@@ -58,6 +58,70 @@ Now process the following input:
 Entity: [entity_name]  
 Events: [event_list]  
 
+"""
+
+PROMPTS["extract_timeline_events"]="""
+Your work is generate a output containing the timeline name and the list of events sorted chronologically by start_time,based on the timelines description and events provided,.
+
+Requirements:
+Sort the events in chronological order based on the start_time field (ascending order from earliest to latest).
+Output only the timeline name and the sorted list of event IDs (id_to_rank).
+
+Example:
+Input:
+
+Timelines:
+{
+  "timelines": [
+    {
+      "timeline_name": "CompanyXYZ Growth Milestones",
+      "timeline_description": "Chronological key events from founding to European expansion."
+    }
+  ]
+}
+Events:
+[
+  {
+    "id_to_rank": "E_1",
+    "sentence": "CompanyXYZ founded",
+    "context": "tech industry",
+    "start_time": "2005-01-01",
+    "end_time": null,
+    "time_static": false
+  },
+  {
+    "id_to_rank": "E_2",
+    "sentence": "First product launch",
+    "context": "product release",
+    "start_time": "2006-03-15",
+    "end_time": null,
+    "time_static": false
+  },
+  {
+    "id_to_rank": "E_3",
+    "sentence": "Expanded to Europe",
+    "context": "global expansion",
+    "start_time": "2010-08-01",
+    "end_time": null,
+    "time_static": false
+  }
+]
+
+Output :
+{
+  "timelines": [
+    {
+      "timeline_name": "CompanyXYZ Growth Milestones",
+      "timeline_description": "Chronological key events from founding to European expansion.",
+      "rank_events":E_1<SEP>E_2<SEP>E_3
+     
+    }
+  ]
+}
+
+Real Data:
+Timelines:{timelines}
+Events:{events}
 """
 
 PROMPTS["precise_time"] = """

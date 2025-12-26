@@ -198,4 +198,4 @@ for idx, obj in enumerate(tqdm(corpus_data, desc="Loading docs", total=total_doc
 # graph_func.insert(insert_docs)
 graph_func.insert(all_docs)
 
-print(graph_func.query("Which position did Pat Duncan hold in Feb 1996?", param=QueryParam(mode="dynamic")))
+print(graph_func.query("Givanildo Oliveira played for which team from 1969 to 1976?", param=QueryParam(mode="dynamic")))

@@ -681,7 +681,6 @@ async def extract_events(
             already_processed += 1
             logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
             return {}
-
     
     async def _process_2_step_events(chunk_key_dp: tuple[str, TextChunkSchema]):
         nonlocal already_processed, already_events
@@ -830,7 +829,7 @@ async def extract_events(
             logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
             return {},{}
 
-    async def _process_2_step_entities(event_dict,event_2_llm_dict):
+    async def _process_2_step_entities(event_dict,event_2_llm_dict,chunk_key):
         try:
             content = str(event_2_llm_dict)
             
@@ -937,12 +936,12 @@ async def extract_events(
             
         except Exception as e:
             already_processed += 1
-            logger.error(f"Failed to extract events from chunk {chunk_key_dp[0]}: {e}")
+            logger.error(f"Failed to extract events from chunk {chunk_key[0]}: {e}")
             return {},{}
 
     async def _process_2_step(chunk_key):
         event_dict,event_2_llm_dict = await _process_2_step_events(chunk_key)
-        return await _process_2_step_entities(event_dict,event_2_llm_dict)
+        return await _process_2_step_entities(event_dict,event_2_llm_dict,chunk_key)
     
     event_extraction_start = time.time()
     try:
@@ -1039,7 +1038,7 @@ async def extract_events(
 
     entity_extraction_start = time.time()
     all_maybe_entities = {}
-    for event_data in all_events_data:##TODO'str' object has no attribute 'get', took 2575.5298s
+    for event_data in all_events_data:
         entity_list = event_data.get("entities", [])
         source_id = event_data.get("source_id", "")
         for entity in entity_list:
@@ -1092,7 +1091,7 @@ async def extract_events(
                     logger.debug(f"Added new entity: {entity_name}")
 
     phase_times["entity_extract"] = time.time() - entity_extraction_start
-    ####TODO 对实体节点消歧。  (已提取实体节点)  
+
 
     entity_merging_start = time.time()
     all_entities_data = []
@@ -1140,7 +1139,7 @@ async def extract_events(
         logger.warning("No events found, maybe your LLM is not working")
         return None, {}
         
-    vdb_update_start = time.time()##TODO_VDB_STORAGE
+    vdb_update_start = time.time()
     if events_vdb is not None and len(all_events_data) > 0:
         events_for_vdb = {}
         for dp in all_events_data:
@@ -1445,6 +1444,62 @@ async def _merge_entities_then_upsert(
     )
 
     return entity_data
+
+async def _merge_timelines_then_upsert(
+    timeline_id: str,
+    timeline_data: list[dict],
+    dyg_inst: BaseGraphStorage,
+):
+    """
+    合并时间线数据并将其更新到图存储中
+    
+    消歧规则：
+    1. 提取时间线ID
+    2. 收集所有具有相同ID的节点进行合并
+    3. 合并规则：
+        "name": 不变
+        "description": 不变
+        "rank_events": 保留最长的
+        "entity_name":不变
+    
+    Args:
+        timeline_id (str): 时间线ID
+        timeline_data (list[dict]): 新的时间线数据列表
+        dyg_inst (BaseGraphStorage): 图存储实例
+        global_config (dict): 全局配置字典
+        
+    Returns:
+        dict: 合并后的时间线数据
+    """
+    name = timeline_data['timeline'][0].get('timeline_name', '')
+    description = timeline_data['timeline'][0].get('timeline_description', '')
+    entity = timeline_data['timeline'][0].get('entity_name', '')
+    rank_events = timeline_data['timeline'][0].get("rank_events", "")
+    # 首先收集所有具有相同ID的时间线
+    already_timeline = None
+    # 获取已存在的时间线数据
+    already_timeline = await dyg_inst.get_node(timeline_id)
+    if already_timeline is not None:
+        rank_events = [rank_events] + [already_timeline["rank_events"]]
+        new_rank_events = max(rank_events, key=len) if rank_events else ""
+        rank_events = new_rank_events
+        
+
+    timeline_data = dict(
+        timeline_name = name,
+        timeline_description = description,
+        rank_events = rank_events,
+        entity_name = entity,
+    )
+
+    await dyg_inst.upsert_node(
+        timeline_id,
+        node_data=timeline_data,
+    )
+
+    return timeline_data
+
+
 @monitor_performance
 async def _merge_event_relations_then_upsert(##TODO_MERGE
     event_id: str,
