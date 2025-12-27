@@ -717,9 +717,6 @@ class GraphRAG:
         logger.info(f"Extracted time constraints: {time_constraints}")
         logger.info(f"Extracted entities: {entities}")
         
-        for entity in entities:
-            entity_timeline = await self.get_entity_timeline(entity)
-        
         topk1 = param.topk1 or 2000  
         et_top_k = param.et_top_k or 20   
         found_results = []
