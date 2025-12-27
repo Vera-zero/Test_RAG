@@ -1,6 +1,38 @@
-#### Test_RAG  
-https://www.yuque.com/g/yuqueyonghuzwrfjw/mgvr3r/riur16fqro38i57m/collaborator/join?token=dSKRkNOJaWz7ZXWl&source=doc_collaborator#
-#### 流程  
-https://www.yuque.com/g/yuqueyonghuzwrfjw/mgvr3r/wlzsa4umdfw3gum4/collaborator/join?token=iRnmyxF21KrbmtiP&source=doc_collaborator# 
-##### issue
-https://www.yuque.com/g/yuqueyonghuzwrfjw/mgvr3r/tubbzhbmg8cl2zg6/collaborator/join?token=7urwdPPthL7s7VTB&source=doc_collaborator# 
+## 🛠️ Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- CUDA-compatible GPU (for optimal performance)
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Vera-zero/Test_RAG.git
+cd Test_RAG
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Download required models:
+```bash
+cd models
+python download.py
+```
+
+4. Process Datasets:  
+   download datasets from ./datasets/link.txt  
+   change the filedirs in datasets_trans.py
+```bash
+cd datasets
+python datasets_trans.py
+```
+
+## 🚀 Quick Start
+```bash
+python examples/openai_all.py
+```
