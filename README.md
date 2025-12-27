@@ -25,7 +25,7 @@ python download.py
 ```
 
 4. Process Datasets:  
-   download datasets from ./datasets/link.txt  
+   download Time QA datasets 
    change the filedirs in datasets_trans.py
 ```bash
 cd datasets
